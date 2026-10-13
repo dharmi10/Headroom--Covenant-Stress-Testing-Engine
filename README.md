@@ -129,11 +129,23 @@ strings. The same inputs and versions always produce the same hash.
 | Mapping coverage | Reported | 12 of 12 required items verified, of which 9 from reported concepts and 3 from sourced analyst values |
 | Compiler semantic accuracy | Reported | `make measure` runs a real compile against the golden agreement and scores it clause by clause; it needs credentials, so it is not part of the test suite |
 
-The test suite is 165 tests covering the arithmetic, the cap engine, XBRL
+The test suite is 171 tests covering the arithmetic, the cap engine, XBRL
 handling, the compiler, the API and the golden deal end to end, including
 Hypothesis property tests for the three evaluator invariants: removing a
 positive add-back never raises the cushion, a pool's allowance never exceeds
-its cap, and results never depend on the order components are listed in.
+its cap, and results never depend on the order components are listed in. One
+further test fetches from EDGAR and is skipped unless `HEADROOM_LIVE=1`.
+
+### What it looks like when it cannot answer
+
+Run the same deal at 31 December 2025 and three of the four scenarios decline.
+Teleflex tags impairment only in the quarters where the amount is non-zero, so
+no TTM window can be built mechanically, and the analyst values that filled the
+gap were sourced for a different period and are refused rather than reused. S0,
+S1 and S2 report `missing_analyst_input` naming both dates; S3 keeps only the
+standard adjustments, all of them reported, computes to a loss, and returns a
+BREACH with no finite ratio. Three scenarios decline to answer and the one that
+can, does.
 
 ## Layout
 

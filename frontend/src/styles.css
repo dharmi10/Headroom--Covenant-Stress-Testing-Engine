@@ -241,6 +241,9 @@ main {
 
 .panel-body.flush {
   padding: 0;
+  /* A wide table scrolls inside its panel rather than taking the page
+   * sideways with it. */
+  overflow-x: auto;
 }
 
 .muted {
@@ -557,6 +560,36 @@ tbody tr.excluded td {
 
 .component-row[aria-selected="true"] td:first-child {
   box-shadow: inset 3px 0 0 var(--highlight-edge);
+}
+
+/* The mapping table carries long written rationales; give that column the
+ * room and let it wrap rather than letting it set the table width. */
+.mapping-table {
+  table-layout: fixed;
+}
+
+.mapping-table th:nth-child(1),
+.mapping-table td:nth-child(1) {
+  width: 16%;
+}
+
+.mapping-table th:nth-child(2),
+.mapping-table td:nth-child(2) {
+  width: 22%;
+}
+
+.mapping-table th:nth-child(3),
+.mapping-table td:nth-child(3) {
+  width: 11%;
+}
+
+.mapping-table th:nth-child(5),
+.mapping-table td:nth-child(5) {
+  width: 8%;
+}
+
+.mapping-table td {
+  overflow-wrap: anywhere;
 }
 
 .clause-ref {

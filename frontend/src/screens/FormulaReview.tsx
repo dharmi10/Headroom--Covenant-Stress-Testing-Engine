@@ -418,14 +418,15 @@ export function FormulaReview({
             </span>
           </div>
 
-          <MappingReview
-            dealId={dealId}
-            mappings={mappings}
-            testDate={testDate}
-            onChanged={onChanged}
-          />
         </div>
       </div>
+
+      <MappingReview
+        dealId={dealId}
+        mappings={mappings}
+        testDate={testDate}
+        onChanged={onChanged}
+      />
     </>
   );
 }
@@ -483,7 +484,7 @@ function MappingReview({
         </span>
       </div>
       <div className="panel-body flush">
-        <table>
+        <table className="mapping-table">
           <thead>
             <tr>
               <th>Formula item</th>
