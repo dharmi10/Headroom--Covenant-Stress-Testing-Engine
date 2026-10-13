@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/format.ts","./src/main.tsx","./src/components/facttable.tsx","./src/components/ladder.tsx","./src/components/trace.tsx","./src/components/verdict.tsx","./src/screens/audittrail.tsx","./src/screens/dealoverview.tsx","./src/screens/formulareview.tsx","./src/screens/newdeal.tsx","./src/screens/stresstesting.tsx"],"version":"5.9.3"}

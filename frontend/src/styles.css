@@ -1,0 +1,894 @@
+/* Headroom.
+ *
+ * Two voices, one instrument. The agreement is set in a serif and reads like
+ * the document it is; the engine around it is set in a sans with tabular
+ * figures and reads like an instrument. Structure comes from hairlines, not
+ * from shadows or cards: an analyst compares numbers down a column, and a
+ * border tells them where a column ends while a shadow only decorates it.
+ *
+ * Status is never carried by colour alone - every verdict has a word.
+ */
+
+:root {
+  --ink: #10213a;
+  --ink-soft: #3c4d66;
+  --ink-faint: #6b7a91;
+  --paper: #ffffff;
+  --paper-tint: #f5f7fa;
+  --paper-sunk: #eef2f7;
+  --rule: #d5dce5;
+  --rule-strong: #aab6c6;
+
+  --pass: #2f6f52;
+  --pass-wash: #eaf2ed;
+  --tight: #8a6210;
+  --tight-wash: #fbf2de;
+  --breach: #a42a24;
+  --breach-wash: #faeceb;
+
+  --highlight: #fdf3cf;
+  --highlight-edge: #d9b84a;
+  --focus: #2b5fa8;
+
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+
+  --gutter: 24px;
+  --radius: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* The brief asks for a restrained institutional look on white. A dark
+   * variant would need its own verdict palette to stay accessible, so the
+   * app stays light and says so rather than half-inverting. */
+  :root {
+    color-scheme: light;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper-tint);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+h1 {
+  font-size: 20px;
+}
+h2 {
+  font-size: 17px;
+}
+h3 {
+  font-size: 15px;
+}
+
+a {
+  color: var(--focus);
+}
+
+button {
+  font: inherit;
+  font-variant-numeric: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* -- shell ---------------------------------------------------------------- */
+
+.shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 14px var(--gutter) 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.masthead-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.wordmark {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.wordmark span {
+  color: #8fa6c4;
+  font-weight: 400;
+  margin-left: 10px;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.deal-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #c3d0e1;
+}
+
+.deal-picker select {
+  font: inherit;
+  background: #1b2f4d;
+  color: var(--paper);
+  border: 1px solid #34496a;
+  border-radius: var(--radius);
+  padding: 4px 8px;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.tab {
+  background: transparent;
+  color: #b8c7db;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  padding: 9px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.tab:hover {
+  color: var(--paper);
+}
+
+.tab[aria-current="page"] {
+  color: var(--paper);
+  border-bottom-color: #7fa8dd;
+  font-weight: 500;
+}
+
+.tab-question {
+  display: block;
+  font-size: 11.5px;
+  color: #7e93ae;
+  font-weight: 400;
+}
+
+.tab[aria-current="page"] .tab-question {
+  color: #b8c7db;
+}
+
+main {
+  flex: 1;
+  padding: var(--gutter);
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* -- panels --------------------------------------------------------------- */
+
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  margin-bottom: var(--gutter);
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel-head p {
+  margin: 2px 0 0;
+  color: var(--ink-faint);
+  font-size: 13px;
+  max-width: 68ch;
+}
+
+.panel-body {
+  padding: 16px;
+}
+
+.panel-body.flush {
+  padding: 0;
+}
+
+.muted {
+  color: var(--ink-faint);
+}
+
+.small {
+  font-size: 13px;
+}
+
+.mono-ish {
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- the finding (screen 1 hero) ----------------------------------------- */
+
+.finding {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: var(--gutter);
+}
+
+.finding.verdict-PASS {
+  border-left-color: var(--pass);
+}
+.finding.verdict-TIGHT {
+  border-left-color: var(--tight);
+}
+.finding.verdict-BREACH {
+  border-left-color: var(--breach);
+}
+.finding.verdict-NOT_COMPUTABLE {
+  border-left-color: var(--tight);
+}
+
+.finding h1 {
+  font-family: var(--serif);
+  font-size: 25px;
+  line-height: 1.32;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  max-width: 46ch;
+}
+
+.finding h1 b {
+  font-weight: 600;
+}
+
+.finding-meta {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.finding-meta div {
+  display: flex;
+  gap: 6px;
+}
+
+.finding-meta dt {
+  color: var(--ink-faint);
+}
+
+.finding-meta dd {
+  margin: 0;
+}
+
+.disclaimer {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  max-width: 80ch;
+  margin: 0 0 var(--gutter);
+}
+
+/* -- verdict badges ------------------------------------------------------- */
+
+.verdict {
+  display: inline-block;
+  border: 1px solid;
+  border-radius: var(--radius);
+  padding: 1px 7px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.verdict-chip-PASS {
+  color: var(--pass);
+  border-color: var(--pass);
+  background: var(--pass-wash);
+}
+.verdict-chip-TIGHT {
+  color: var(--tight);
+  border-color: var(--tight);
+  background: var(--tight-wash);
+}
+.verdict-chip-BREACH {
+  color: var(--breach);
+  border-color: var(--breach);
+  background: var(--breach-wash);
+}
+.verdict-chip-NOT_COMPUTABLE {
+  color: var(--tight);
+  border-color: var(--tight);
+  background: var(--tight-wash);
+}
+
+/* -- tables --------------------------------------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+thead th {
+  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule-strong);
+  white-space: nowrap;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+tbody tr.excluded td {
+  color: var(--ink-faint);
+}
+
+.state {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* -- the scenario ladder (screen 1 + 3) ---------------------------------- */
+
+/* The one place this interface raises its voice. S0 to S3 really is a
+ * sequence - each rung removes one class of adjustment - so the rungs are
+ * drawn as a descent, with the removed class named on the step between them. */
+
+.ladder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rung {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 18ch) 7ch 9ch 8ch;
+  gap: 12px;
+  align-items: baseline;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.rung:last-child {
+  border-bottom: 0;
+}
+
+.rung-id {
+  font-weight: 600;
+  margin-right: 8px;
+  color: var(--ink-soft);
+}
+
+.rung-label {
+  font-size: 14px;
+}
+
+.rung-question {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+  max-width: 54ch;
+}
+
+.rung-bar {
+  position: relative;
+  height: 10px;
+  background: var(--paper-sunk);
+  border-radius: 1px;
+  align-self: center;
+}
+
+.rung-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ink-soft);
+  border-radius: 1px;
+}
+
+.rung-bar i.over {
+  background: var(--breach);
+}
+
+.rung-bar u {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--ink);
+  text-decoration: none;
+}
+
+.step {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 16px 6px 44px;
+  background: var(--paper-tint);
+  border-bottom: 1px solid var(--rule);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.step b {
+  font-weight: 500;
+}
+
+.delta {
+  color: var(--breach);
+  font-weight: 500;
+}
+
+/* -- clause review (screen 2) -------------------------------------------- */
+
+.review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gutter);
+  align-items: start;
+}
+
+/* Grid children default to min-content width, which lets a wide table push
+ * the whole page sideways. */
+.review-grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 1000px) {
+  .review-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.clause-pane {
+  position: sticky;
+  top: calc(var(--gutter) + 92px);
+  max-height: calc(100vh - 2 * var(--gutter) - 92px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.clause-text {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.62;
+  padding: 18px 20px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: #1d2b42;
+}
+
+.clause-text mark {
+  background: var(--highlight);
+  box-shadow: inset 0 -2px 0 var(--highlight-edge);
+  color: inherit;
+  padding: 1px 0;
+}
+
+.clause-empty {
+  padding: 18px 20px;
+  color: var(--ink-faint);
+  font-size: 14px;
+}
+
+.component-row {
+  cursor: pointer;
+}
+
+.component-row:hover {
+  background: var(--paper-tint);
+}
+
+.component-row[aria-selected="true"] {
+  background: var(--highlight);
+}
+
+.component-row[aria-selected="true"] td:first-child {
+  box-shadow: inset 3px 0 0 var(--highlight-edge);
+}
+
+.clause-ref {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.pill {
+  display: inline-block;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 0 6px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  background: var(--paper-tint);
+  white-space: nowrap;
+}
+
+.pill.flag {
+  border-color: var(--tight);
+  color: var(--tight);
+  background: var(--tight-wash);
+}
+
+.pill.ok {
+  border-color: var(--pass);
+  color: var(--pass);
+  background: var(--pass-wash);
+}
+
+.blockers {
+  border: 1px solid var(--tight);
+  background: var(--tight-wash);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: var(--gutter);
+}
+
+.blockers h2 {
+  font-size: 15px;
+  color: var(--tight);
+}
+
+.blockers ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+}
+
+.blockers li {
+  margin-bottom: 4px;
+}
+
+/* -- trace drawer --------------------------------------------------------- */
+
+.trace-value {
+  background: none;
+  border: 0;
+  border-bottom: 1px dashed var(--rule-strong);
+  color: inherit;
+  padding: 0;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.trace-value:hover {
+  border-bottom-style: solid;
+  border-bottom-color: var(--focus);
+  color: var(--focus);
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 33, 58, 0.34);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 20;
+}
+
+.drawer {
+  background: var(--paper);
+  width: min(560px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  border-left: 1px solid var(--rule-strong);
+}
+
+.drawer-head {
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.drawer-body {
+  padding: 18px;
+}
+
+.working {
+  font-size: 14px;
+  line-height: 1.75;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  background: var(--paper-tint);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.working div + div {
+  border-top: 1px solid var(--rule);
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
+.close {
+  background: none;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 2px 8px;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+/* -- forms ---------------------------------------------------------------- */
+
+.field {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.field input,
+.field select,
+.field textarea {
+  display: block;
+  width: 100%;
+  font: inherit;
+  margin-top: 3px;
+  padding: 6px 8px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.field textarea {
+  min-height: 72px;
+  resize: vertical;
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn {
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: #1b3357;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn.secondary {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+
+.btn.secondary:hover:not(:disabled) {
+  background: var(--paper-tint);
+}
+
+.btn.small {
+  padding: 2px 9px;
+  font-size: 13px;
+}
+
+.notice {
+  border: 1px solid var(--rule-strong);
+  border-left: 3px solid var(--ink-soft);
+  background: var(--paper);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13.5px;
+}
+
+.notice.bad {
+  border-color: var(--breach);
+  border-left-color: var(--breach);
+  background: var(--breach-wash);
+  color: #6f1d19;
+}
+
+.notice.good {
+  border-color: var(--pass);
+  border-left-color: var(--pass);
+  background: var(--pass-wash);
+  color: #1f4d39;
+}
+
+.loading {
+  padding: 40px var(--gutter);
+  color: var(--ink-faint);
+}
+
+.kv {
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.kv > div {
+  display: grid;
+  grid-template-columns: minmax(0, 15ch) minmax(0, 1fr);
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.kv > div:last-child {
+  border-bottom: 0;
+}
+
+.kv dt {
+  color: var(--ink-faint);
+}
+
+.kv dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.hash {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  color: var(--ink-soft);
+}
+
+.chart-wrap {
+  padding: 8px 8px 0;
+}
+
+details.facts {
+  font-size: 13px;
+}
+
+details.facts summary {
+  cursor: pointer;
+  color: var(--focus);
+}
+
+details.facts table {
+  margin-top: 8px;
+  font-size: 12.5px;
+}
+
+/* -- narrow screens -------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  :root {
+    --gutter: 16px;
+  }
+
+  /* The rung's five columns stop being readable long before they stop
+   * fitting, so below this width the bar moves to its own line under the
+   * figures it describes. */
+  .rung {
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas:
+      "label ratio verdict"
+      "bar bar bar";
+    row-gap: 8px;
+  }
+
+  .rung > :nth-child(1) {
+    grid-area: label;
+  }
+  .rung-bar {
+    grid-area: bar;
+  }
+  .rung > :nth-child(3) {
+    grid-area: ratio;
+  }
+  .rung > :nth-child(4) {
+    display: none; /* the EBITDA column; it is on the stress screen table */
+  }
+  .rung > :nth-child(5) {
+    grid-area: verdict;
+  }
+
+  .step {
+    padding-left: var(--gutter);
+  }
+
+  .finding h1 {
+    font-size: 20px;
+  }
+
+  .kv > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .drawer {
+    width: 100%;
+  }
+
+  .clause-pane {
+    position: static;
+    max-height: none;
+  }
+}
