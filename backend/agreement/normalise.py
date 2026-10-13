@@ -104,9 +104,16 @@ def html_to_text(raw_html: str) -> str:
     return normalise_text("".join(pieces))
 
 
+#: An opening tag of a kind a filed exhibit is built from. EDGAR wraps even a
+#: plain-text exhibit in SGML headers, so the test looks for real markup rather
+#: than for any angle bracket.
+_HTML_TAG_RE = re.compile(
+    r"<(?:html|body|div|p|font|span|table|tr|td|br|h[1-6]|ul|ol|li)[\s>/]", re.I
+)
+
+
 def looks_like_html(raw: str) -> bool:
-    head = raw[:4000].lower()
-    return "<html" in head or "<div" in head or "<p " in head or "<font" in head
+    return _HTML_TAG_RE.search(raw[:8000]) is not None
 
 
 def normalise(raw: str, *, source_url: str = "") -> NormalisedAgreement:

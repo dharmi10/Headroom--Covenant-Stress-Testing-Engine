@@ -146,3 +146,39 @@ def test_component_order_does_not_change_the_result():
 
 def test_canonical_hash_ignores_key_order():
     assert canonical_hash({"a": 1, "b": 2}) == canonical_hash({"b": 2, "a": 1})
+
+
+def test_the_output_hash_does_not_depend_on_the_ambient_decimal_context():
+    """A run is stored and rehashed from whatever thread serves the request,
+    so nothing in the canonical payload may depend on the ambient decimal
+    precision. This caught dec_str using Decimal.normalize, which rounds to
+    the context precision and silently changed the hash."""
+    import decimal
+    from concurrent.futures import ThreadPoolExecutor
+
+    version = formula_version(_formula(), [leverage_covenant("5.00")])
+
+    def run_at(precision: int) -> tuple[str, str]:
+        decimal.getcontext().prec = precision
+        result = evaluate_run(version, _inputs())
+        return result.output_hash, result.as_dict()["adjustment_dependence"]
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        results = list(pool.map(run_at, [12, 28, 60]))
+    assert len({row[0] for row in results}) == 1
+    assert len({row[1] for row in results}) == 1
+
+
+def test_dec_str_is_exact_and_strips_only_trailing_zeros():
+    from decimal import Decimal, localcontext
+
+    from backend.evaluator.money import dec_str
+
+    with localcontext() as ctx:
+        ctx.prec = 6
+        long_value = Decimal("0.4264456597491684089754007310088347986987")
+        assert dec_str(long_value) == "0.4264456597491684089754007310088347986987"
+    assert dec_str(Decimal("1.2300")) == "1.23"
+    assert dec_str(Decimal("-0.000")) == "0"
+    assert dec_str(Decimal("1E+3")) == "1000"
+    assert dec_str(Decimal("0")) == "0"

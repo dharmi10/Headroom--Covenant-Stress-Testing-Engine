@@ -53,14 +53,20 @@ def to_decimal(value: str | int | Decimal, *, field: str = "amount") -> Decimal:
 
 
 def dec_str(value: Decimal) -> str:
-    """Canonical string form of a decimal, for hashing and JSON."""
-    normalised = value.normalize()
-    if normalised == 0:
+    """Canonical string form of a decimal, for hashing and JSON.
+
+    Deliberately avoids ``Decimal.normalize``, which rounds to the *ambient*
+    context precision. That made this function's output depend on which thread
+    it ran in, and so made the canonical output hash depend on it too. Here the
+    digits are formatted in full and only trailing fractional zeros are
+    stripped, which is exact and context-independent.
+    """
+    text = format(value, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    if text in ("", "-", "-0"):
         return "0"
-    sign, digits, exponent = normalised.as_tuple()
-    if isinstance(exponent, int) and exponent > 0:
-        normalised = normalised.quantize(Decimal(1))
-    return format(normalised, "f")
+    return text
 
 
 def div(numerator: Decimal, denominator: Decimal) -> Decimal | None:

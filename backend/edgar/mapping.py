@@ -51,6 +51,10 @@ class MappingRecord(BaseModel):
 
     @model_validator(mode="after")
     def _gate(self) -> "MappingRecord":
+        if self.concept is not None and self.analyst_value is not None:
+            # A concept and an analyst value are alternatives, not a value with
+            # a label: holding both would leave which one computes implicit.
+            raise ValueError("a mapping has either a concept or an analyst value, not both")
         if self.status == "verified":
             if not (self.rationale and self.rationale.strip()):
                 raise ValueError("a verified mapping requires a written rationale")
