@@ -131,6 +131,7 @@ export interface MappingRecord {
   rationale: string | null;
   mapping_version: number;
   analyst_value: string | null;
+  analyst_value_as_of: string | null;
   decided_by: string | null;
   decided_at: string | null;
   candidates: { concept: string; reported: boolean }[];
@@ -402,6 +403,7 @@ export const api = {
       rationale: string;
       concept?: string | null;
       analyst_value?: string | null;
+      analyst_value_as_of?: string | null;
       reviewer?: string | null;
     },
   ) =>

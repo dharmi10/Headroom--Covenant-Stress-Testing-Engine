@@ -107,6 +107,10 @@ class MappingDecision(BaseModel):
     rationale: str = Field(min_length=1)
     concept: str | None = None
     analyst_value: str | None = None
+    analyst_value_as_of: dt.date | None = Field(
+        default=None,
+        description="The test date an analyst value was sourced for. Required with one.",
+    )
     reviewer: str | None = None
 
     @field_validator("rationale")
@@ -506,6 +510,7 @@ def decide_mapping(
             rationale=payload.rationale,
             concept=payload.concept,
             analyst_value=payload.analyst_value,
+            analyst_value_as_of=payload.analyst_value_as_of,
             reviewer=payload.reviewer,
         )
         return record.model_dump(mode="json")

@@ -16,7 +16,7 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from backend.evaluator.schema import STRICT, IsoDateTime
+from backend.evaluator.schema import STRICT, IsoDate, IsoDateTime
 from backend.evaluator.vocabulary import ANALYST_ONLY_ITEMS, ItemName, period_type_for
 
 MAPPING_FILE = Path(__file__).resolve().parent.parent / "mapping.yaml"
@@ -46,11 +46,17 @@ class MappingRecord(BaseModel):
     rationale: str | None = None
     mapping_version: int = Field(default=1, ge=1)
     analyst_value: str | None = None
+    analyst_value_as_of: IsoDate | None = None
     decided_by: str | None = None
     decided_at: IsoDateTime | None = None
 
     @model_validator(mode="after")
     def _gate(self) -> "MappingRecord":
+        if self.analyst_value is not None and self.analyst_value_as_of is None:
+            # An analyst value is a figure for one TTM period, hand-summed from
+            # that period's filings. Without the period it is bound to, the
+            # next quarter's run would silently reuse last quarter's number.
+            raise ValueError("an analyst value must record the test date it was sourced for")
         if self.concept is not None and self.analyst_value is not None:
             # A concept and an analyst value are alternatives, not a value with
             # a label: holding both would leave which one computes implicit.

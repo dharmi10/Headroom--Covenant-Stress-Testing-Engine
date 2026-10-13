@@ -5,6 +5,9 @@ from __future__ import annotations
 import datetime as dt
 from decimal import Decimal
 
+import pytest
+from pydantic import ValidationError
+
 from backend.edgar.facts import parse_company_facts
 from backend.edgar.mapping import MappingRecord, propose, required_items
 from backend.edgar.ttm import (
@@ -134,12 +137,40 @@ def test_an_unavailable_mapping_returns_missing_analyst_input():
     assert resolved.reason == "missing_analyst_input"
 
 
+def test_an_analyst_value_must_say_which_period_it_was_sourced_for():
+    """Without the period, next quarter's run would silently reuse it."""
+    with pytest.raises(ValidationError, match="test date it was sourced for"):
+        MappingRecord(
+            formula_item="run_rate_cost_savings",
+            status="verified",
+            period_type="duration",
+            analyst_value="12500000",
+            rationale="management presentation",
+        )
+
+
+def test_an_analyst_value_from_another_period_is_refused():
+    record = MappingRecord(
+        formula_item="run_rate_cost_savings",
+        status="verified",
+        period_type="duration",
+        analyst_value="12500000",
+        analyst_value_as_of=dt.date(2025, 12, 31),
+        rationale="management presentation",
+    )
+    resolved = resolve_duration_item("run_rate_cost_savings", record, [], TEST_DATE)
+    assert resolved.value is None
+    assert resolved.reason == "missing_analyst_input"
+    assert "cannot be reused for 2026-03-31" in (resolved.note or "")
+
+
 def test_a_verified_analyst_value_is_used_and_kept_as_provenance():
     record = MappingRecord(
         formula_item="run_rate_cost_savings",
         status="verified",
         period_type="duration",
         analyst_value="12500000",
+        analyst_value_as_of=TEST_DATE,
         rationale="management presentation dated 2026-02-01, slide 14",
     )
     resolved = resolve_duration_item("run_rate_cost_savings", record, [], TEST_DATE)

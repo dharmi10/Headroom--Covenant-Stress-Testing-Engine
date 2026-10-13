@@ -184,13 +184,31 @@ def _unusable(item: str, record: MappingRecord) -> ItemInput:
 
 
 def _analyst_value(item: str, record: MappingRecord, test_date: dt.date) -> ItemInput:
-    """A verified mapping with no concept: the analyst supplied the number."""
+    """A verified mapping with no concept: the analyst supplied the number.
+
+    An analyst value is a figure for one TTM period, hand-summed from that
+    period's filings. Reusing it for another quarter would be the same silent
+    assumption as substituting zero, so a value sourced for a different test
+    date is refused rather than carried forward.
+    """
     if record.analyst_value is None:
         return ItemInput(
             item=item,  # type: ignore[arg-type]
             reason="missing_analyst_input",
             mapping_version=record.mapping_version,
             note=record.rationale,
+        )
+    if record.analyst_value_as_of != test_date:
+        return ItemInput(
+            item=item,  # type: ignore[arg-type]
+            reason="missing_analyst_input",
+            mapping_version=record.mapping_version,
+            note=(
+                "the analyst value was sourced for the period ending "
+                + str(record.analyst_value_as_of)
+                + " and cannot be reused for "
+                + test_date.isoformat()
+            ),
         )
     value = to_decimal(record.analyst_value, field=item)
     return ItemInput(

@@ -178,3 +178,24 @@ and then the reason codes say which item and which scenarios it affected.
 | Clause (b)(iv), (b)(vi), (b)(viii)–(ix), (b)(xi), (b)(xiii) and (c)(i), (c)(iii)–(iv) have no vocabulary item | Excluded with notes; the net effect understates covenant EBITDA on the add-back side and overstates it on the deduction side |
 | The cross-period claw-back proviso needs state across periods | Recorded as `unsupported` and excluded; overstates covenant EBITDA if such payments occurred |
 | Section location is regex-based | An unusual layout fails loudly, and the fallback is an analyst pasting the clause, never a second model call |
+
+## An analyst value is bound to the period it was sourced for
+
+Found by the integration test, and it was a real hole. A mapping record with an
+analyst value had no period attached, so a run for a *different* quarter reused
+last quarter's hand-summed figure without saying anything. For the golden deal
+that turned a NOT_COMPUTABLE Q4 2025 into a confident BREACH built partly on
+Q2 2025 numbers.
+
+An analyst value is a figure for one TTM period, hand-summed from that period's
+filings, so the record now carries `analyst_value_as_of` and the schema refuses
+a value without one. A run for another test date reports
+`missing_analyst_input` naming both dates, which is the same fail-closed rule
+that already applied to a missing fact: reusing a stale number is the same
+silent assumption as substituting zero.
+
+The later-quarter case is worth looking at in the UI. At 2025-12-31, S0, S1 and
+S2 all report `missing_analyst_input`, while S3 keeps only the standard
+adjustments — every one of them reported — and computes to a loss, so the
+leverage covenant is a BREACH with no finite ratio. Three scenarios decline to
+answer, and the one that can answer does.

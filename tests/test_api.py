@@ -310,6 +310,7 @@ def _verify_all_mappings(client, golden_mappings: dict) -> None:
                 "rationale": record["rationale"],
                 "concept": record["concept"],
                 "analyst_value": record.get("analyst_value"),
+                "analyst_value_as_of": record.get("analyst_value_as_of"),
                 "reviewer": "analyst",
             },
         )

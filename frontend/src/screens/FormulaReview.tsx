@@ -28,12 +28,14 @@ export function FormulaReview({
   version,
   blockers,
   mappings,
+  testDate,
   onChanged,
 }: {
   dealId: string;
   version: FormulaVersion;
   blockers: Blocker[];
   mappings: MappingRecord[];
+  testDate: string | null;
   onChanged: () => void;
 }) {
   const [selection, setSelection] = useState<Selection>(null);
@@ -416,7 +418,12 @@ export function FormulaReview({
             </span>
           </div>
 
-          <MappingReview dealId={dealId} mappings={mappings} onChanged={onChanged} />
+          <MappingReview
+            dealId={dealId}
+            mappings={mappings}
+            testDate={testDate}
+            onChanged={onChanged}
+          />
         </div>
       </div>
     </>
@@ -449,10 +456,12 @@ function renderHighlighted(
 function MappingReview({
   dealId,
   mappings,
+  testDate,
   onChanged,
 }: {
   dealId: string;
   mappings: MappingRecord[];
+  testDate: string | null;
   onChanged: () => void;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
@@ -495,7 +504,14 @@ function MappingReview({
                 </td>
                 <td className="small">
                   {record.analyst_value !== null ? (
-                    <>Analyst value {record.analyst_value}</>
+                    <>
+                      Analyst value {record.analyst_value}
+                      {record.analyst_value_as_of ? (
+                        <span className="state" style={{ display: "block" }}>
+                          sourced for the period ending {record.analyst_value_as_of}
+                        </span>
+                      ) : null}
+                    </>
                   ) : record.concept ? (
                     record.concept
                   ) : (
@@ -543,6 +559,7 @@ function MappingReview({
           <MappingForm
             dealId={dealId}
             record={mappings.find((row) => row.formula_item === editing)!}
+            testDate={testDate}
             onDone={() => {
               setEditing(null);
               onChanged();
@@ -557,15 +574,18 @@ function MappingReview({
 function MappingForm({
   dealId,
   record,
+  testDate,
   onDone,
 }: {
   dealId: string;
   record: MappingRecord;
+  testDate: string | null;
   onDone: () => void;
 }) {
   const [status, setStatus] = useState(record.status === "review_required" ? "verified" : record.status);
   const [concept, setConcept] = useState(record.concept ?? "");
   const [analystValue, setAnalystValue] = useState(record.analyst_value ?? "");
+  const [asOf, setAsOf] = useState(record.analyst_value_as_of ?? testDate ?? "");
   const [rationale, setRationale] = useState(record.rationale ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -579,6 +599,7 @@ function MappingForm({
         rationale,
         concept: analystValue.trim() ? null : concept.trim() || null,
         analyst_value: analystValue.trim() || null,
+        analyst_value_as_of: analystValue.trim() ? asOf || null : null,
         reviewer: "analyst",
       });
       onDone();
@@ -626,6 +647,21 @@ function MappingForm({
           inputMode="decimal"
         />
       </label>
+      {analystValue.trim() ? (
+        <label className="field">
+          Period this value was sourced for
+          <input
+            type="date"
+            value={asOf}
+            onChange={(event) => setAsOf(event.target.value)}
+            required
+          />
+          <span className="state">
+            An analyst value covers one TTM period. A run for a different quarter will ask for a
+            fresh one rather than reuse this.
+          </span>
+        </label>
+      ) : null}
       <label className="field">
         Rationale, kept with the decision
         <textarea
@@ -635,7 +671,12 @@ function MappingForm({
         />
       </label>
       <div className="actions">
-        <button type="button" className="btn" disabled={busy || !rationale.trim()} onClick={() => void submit()}>
+        <button
+          type="button"
+          className="btn"
+          disabled={busy || !rationale.trim() || (Boolean(analystValue.trim()) && !asOf)}
+          onClick={() => void submit()}
+        >
           Record decision
         </button>
         <span className="small muted">A decision creates mapping version {record.mapping_version + 1}.</span>

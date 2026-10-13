@@ -113,6 +113,7 @@ def main() -> int:
                 rationale=record.rationale or "",
                 concept=record.concept,
                 analyst_value=record.analyst_value,
+                analyst_value_as_of=record.analyst_value_as_of,
                 reviewer="golden set",
             )
         verified, required = service.coverage(approved, service.mapping_records(session, deal.id))

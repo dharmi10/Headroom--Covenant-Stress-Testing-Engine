@@ -351,6 +351,7 @@ def decide_mapping(
     rationale: str,
     concept: str | None = None,
     analyst_value: str | None = None,
+    analyst_value_as_of: dt.date | None = None,
     reviewer: str | None = None,
 ) -> MappingRecord:
     """Record an analyst decision on one mapping, bumping its version."""
@@ -368,12 +369,15 @@ def decide_mapping(
     if analyst_value is not None and analyst_value.strip():
         chosen_concept: str | None = None
         chosen_value: str | None = analyst_value.strip()
+        chosen_as_of = analyst_value_as_of or current.analyst_value_as_of
     elif concept is not None and concept.strip():
         chosen_concept = concept.strip()
         chosen_value = None
+        chosen_as_of = None
     else:
         chosen_concept = current.concept
         chosen_value = None
+        chosen_as_of = None
 
     updated = current.model_copy(
         update={
@@ -381,6 +385,7 @@ def decide_mapping(
             "rationale": rationale,
             "concept": chosen_concept,
             "analyst_value": chosen_value,
+            "analyst_value_as_of": chosen_as_of,
             "mapping_version": current.mapping_version + 1,
             "decided_by": reviewer,
             "decided_at": utcnow(),

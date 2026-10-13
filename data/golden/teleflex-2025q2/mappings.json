@@ -71,7 +71,8 @@
       "rationale": "Clause (b)(v) adds any non-cash charge; for this period that is goodwill and intangible impairment. No single concept carries it and neither sparse concept has a fact in all four quarters, because Teleflex tags them only in quarters with a non-zero amount, so no TTM window can be built mechanically. Hand-summed from the filings: goodwill impairment 240,000 thousand in Q4 FY2024 (GoodwillImpairmentLoss, accession 0000096943-25-000031) and intangible impairment 5,724 thousand in Q4 FY2024 and 8,117 thousand in Q2 FY2025 (ImpairmentOfIntangibleAssetsExcludingGoodwill, accessions 0000096943-26-000019 and 0000096943-26-000095), with nil reported in Q3 FY2024 and Q1 FY2025. Total 253,841 thousand.",
       "mapping_version": 1,
       "decided_by": "golden set",
-      "decided_at": "2026-10-13T00:00:00"
+      "decided_at": "2026-10-13T00:00:00",
+      "analyst_value_as_of": "2025-06-29"
     },
     {
       "formula_item": "transaction_costs",
@@ -82,7 +83,8 @@
       "rationale": "Clause (b)(iv) adds charges incurred in connection with acquisitions, investments, dispositions and refinancings. Teleflex tags no acquisition-related cost concept at all and its four reports covering this window separately quantify none, so nothing can be sourced. Recorded as nil, which understates covenant EBITDA if such charges exist and therefore never flatters the covenant.",
       "mapping_version": 1,
       "decided_by": "golden set",
-      "decided_at": "2026-10-13T00:00:00"
+      "decided_at": "2026-10-13T00:00:00",
+      "analyst_value_as_of": "2025-06-29"
     },
     {
       "formula_item": "other_non_cash_gains",
@@ -93,7 +95,8 @@
       "rationale": "Clause (c)(ii) deducts non-cash income or gains. OtherNoncashIncomeExpense is a net concept Teleflex last reported in 2012, and no gain of this kind is separately quantified in the four reports covering this window. Recorded as nil. Unlike the add-backs, a nil deduction overstates covenant EBITDA, so this is the one analyst value here that is not conservative, and it is flagged as a limitation rather than treated as a measurement.",
       "mapping_version": 1,
       "decided_by": "golden set",
-      "decided_at": "2026-10-13T00:00:00"
+      "decided_at": "2026-10-13T00:00:00",
+      "analyst_value_as_of": "2025-06-29"
     },
     {
       "formula_item": "long_term_debt",

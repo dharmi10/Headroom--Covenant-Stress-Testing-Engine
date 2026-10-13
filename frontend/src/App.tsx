@@ -247,6 +247,7 @@ export default function App() {
               version={version}
               blockers={blockers}
               mappings={mappings}
+              testDate={run?.test_date ?? testDates[0] ?? null}
               onChanged={refresh}
             />
           ) : (
