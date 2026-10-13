@@ -1,0 +1,558 @@
+{
+  "deal_id": "teleflex-2025q2",
+  "version": 1,
+  "status": "approved",
+  "source_hash": "sha256:60e01cb1890d539072ac6db1a1acda0ae8cb75bce69db248be3d6c9cf7f5f926",
+  "ebitda": {
+    "formula_id": "teleflex-2025q2",
+    "version": 1,
+    "status": "approved",
+    "source_hash": "sha256:60e01cb1890d539072ac6db1a1acda0ae8cb75bce69db248be3d6c9cf7f5f926",
+    "drafted_with": null,
+    "metric": "consolidated_ebitda",
+    "base": {
+      "item": "net_income",
+      "span": {
+        "start": 82942,
+        "end": 82981,
+        "quote": "Consolidated Net Income for such period"
+      },
+      "clause": "(a)",
+      "reason": null
+    },
+    "components": [
+      {
+        "item": "income_tax_expense",
+        "sign": "+",
+        "category": "standard",
+        "cap_pool": null,
+        "span": {
+          "start": 83109,
+          "end": 83127,
+          "quote": "income tax expense"
+        },
+        "clause": "(b)(i)",
+        "reason": null,
+        "review": {
+          "decision": "accepted",
+          "note": null,
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "interest_expense",
+        "sign": "+",
+        "category": "standard",
+        "cap_pool": null,
+        "span": {
+          "start": 83134,
+          "end": 83206,
+          "quote": "Consolidated Interest Expense, amortization or writeoff of debt discount"
+        },
+        "clause": "(b)(ii)",
+        "reason": null,
+        "review": {
+          "decision": "edited",
+          "note": "Clause (b)(ii) adds Consolidated Interest Expense together with amortisation and write-off of debt discount, issuance costs and financing fees. Mapped to interest_expense alone; the financing-cost components are not separately reported, so this understates the contractual add-back.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "depreciation_amortization",
+        "sign": "+",
+        "category": "standard",
+        "cap_pool": null,
+        "span": {
+          "start": 83343,
+          "end": 83419,
+          "quote": "depreciation and amortization expense, including amortization of intangibles"
+        },
+        "clause": "(b)(iii)",
+        "reason": null,
+        "review": {
+          "decision": "accepted",
+          "note": null,
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "transaction_costs",
+        "sign": "+",
+        "category": "one_time",
+        "cap_pool": null,
+        "span": {
+          "start": 83468,
+          "end": 83555,
+          "quote": "losses, charges or expenses relating to or incurred in connection with the Transactions"
+        },
+        "clause": "(b)(iv)",
+        "reason": null,
+        "review": {
+          "decision": "accepted",
+          "note": "Transaction and acquisition-related charges.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "impairment_charges",
+        "sign": "+",
+        "category": "non_cash",
+        "cap_pool": null,
+        "span": {
+          "start": 84343,
+          "end": 84383,
+          "quote": "any non-cash charges, expenses or losses"
+        },
+        "clause": "(b)(v)",
+        "reason": null,
+        "review": {
+          "decision": "edited",
+          "note": "Clause (b)(v) is a catch-all for any non-cash charge. Mapped to impairment_charges because goodwill and intangible impairments are the only non-cash charges Teleflex quantifies in this period other than stock compensation, which clause (b)(vii) adds back separately. Mapping it to other_non_cash_charges as well would double count.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unmapped",
+        "sign": "+",
+        "category": "non_cash",
+        "cap_pool": null,
+        "span": {
+          "start": 84390,
+          "end": 84497,
+          "quote": "non-cash costs associated with inventory purchase price adjustments and in process research and development"
+        },
+        "clause": "(b)(vi)",
+        "reason": "Non-cash inventory purchase price adjustments and in-process research and development have no item in the vocabulary and no reported concept. Excluded, which understates covenant EBITDA.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "Non-cash inventory purchase price adjustments and in-process research and development have no item in the vocabulary and no reported concept. Excluded, which understates covenant EBITDA.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "stock_based_compensation",
+        "sign": "+",
+        "category": "non_cash",
+        "cap_pool": null,
+        "span": {
+          "start": 84505,
+          "end": 84628,
+          "quote": "non-cash stock based compensation expense relating to stock options and restricted stock granted to employees and directors"
+        },
+        "clause": "(b)(vii)",
+        "reason": null,
+        "review": {
+          "decision": "accepted",
+          "note": null,
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unmapped",
+        "sign": "+",
+        "category": "one_time",
+        "cap_pool": null,
+        "span": {
+          "start": 84637,
+          "end": 84699,
+          "quote": "extraordinary, unusual or non-recurring cash losses or charges"
+        },
+        "clause": "(b)(viii)",
+        "reason": "Extraordinary or non-recurring cash losses are only addable when the borrower classifies them as such in its published statements. That condition is not representable, and no vocabulary item covers the charge. Excluded, which understates covenant EBITDA.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "Extraordinary or non-recurring cash losses are only addable when the borrower classifies them as such in its published statements. That condition is not representable, and no vocabulary item covers the charge. Excluded, which understates covenant EBITDA.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unmapped",
+        "sign": "+",
+        "category": "one_time",
+        "cap_pool": null,
+        "span": {
+          "start": 84848,
+          "end": 84924,
+          "quote": "any net losses from disposed, abandoned or discontinued operations or assets"
+        },
+        "clause": "(b)(ix)",
+        "reason": "Net losses from discontinued operations have no vocabulary item. Excluded, which understates covenant EBITDA.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "Net losses from discontinued operations have no vocabulary item. Excluded, which understates covenant EBITDA.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "restructuring_charges",
+        "sign": "+",
+        "category": "one_time",
+        "cap_pool": "clause_x",
+        "span": {
+          "start": 84930,
+          "end": 84982,
+          "quote": "cash restructuring and restructuring related charges"
+        },
+        "clause": "(b)(x)",
+        "reason": null,
+        "review": {
+          "decision": "accepted",
+          "note": "Capped at 5% of Consolidated EBITDA measured before this clause.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unmapped",
+        "sign": "+",
+        "category": "one_time",
+        "cap_pool": "clause_xi",
+        "span": {
+          "start": 85579,
+          "end": 85680,
+          "quote": "cash charges incurred by the Borrower in connection with the termination of its existing pension plan"
+        },
+        "clause": "(b)(xi)",
+        "reason": "Pension termination cash charges have no vocabulary item. The $25m fixed cap is recorded on the pool so the cap rule survives the exclusion, but nothing is added. Excluded, which understates covenant EBITDA.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "Pension termination cash charges have no vocabulary item. The $25m fixed cap is recorded on the pool so the cap rule survives the exclusion, but nothing is added. Excluded, which understates covenant EBITDA.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unmapped",
+        "sign": "+",
+        "category": "non_cash",
+        "cap_pool": null,
+        "span": {
+          "start": 85947,
+          "end": 86035,
+          "quote": "pre-tax mark-to-market losses on pension plans and settlement/curtailment losses thereon"
+        },
+        "clause": "(b)(xiii)",
+        "reason": "Conditional on the borrower adopting mark-to-market pension accounting, which the language cannot express, and Teleflex has not adopted it. Excluded.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "Conditional on the borrower adopting mark-to-market pension accounting, which the language cannot express, and Teleflex has not adopted it. Excluded.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unsupported",
+        "sign": "-",
+        "category": "non_cash",
+        "cap_pool": null,
+        "span": {
+          "start": 86051,
+          "end": 86222,
+          "quote": "any cash payment made with respect to any non-cash charges added back in computing Consolidated EBITDA for any period pursuant to clauses (b)(v), (b)(vi) or (b)(vii) above"
+        },
+        "clause": "proviso to (b)",
+        "reason": "The claw-back of cash paid in a later period against a non-cash charge added back in an earlier one depends on prior periods. The language has no cross-period state, so this is unsupported rather than approximated. Excluded, which overstates covenant EBITDA if such payments occurred.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "The claw-back of cash paid in a later period against a non-cash charge added back in an earlier one depends on prior periods. The language has no cross-period state, so this is unsupported rather than approximated. Excluded, which overstates covenant EBITDA if such payments occurred.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unmapped",
+        "sign": "-",
+        "category": "one_time",
+        "cap_pool": null,
+        "span": {
+          "start": 86525,
+          "end": 86585,
+          "quote": "extraordinary, unusual or non-recurring cash income or gains"
+        },
+        "clause": "(c)(i)",
+        "reason": "The mirror of clause (b)(viii) on the deduction side, with the same classification condition and no vocabulary item. Excluded, which overstates covenant EBITDA.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "The mirror of clause (b)(viii) on the deduction side, with the same classification condition and no vocabulary item. Excluded, which overstates covenant EBITDA.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "other_non_cash_gains",
+        "sign": "-",
+        "category": "non_cash",
+        "cap_pool": null,
+        "span": {
+          "start": 86734,
+          "end": 86759,
+          "quote": "non- cash income or gains"
+        },
+        "clause": "(c)(ii)",
+        "reason": null,
+        "review": {
+          "decision": "accepted",
+          "note": null,
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unmapped",
+        "sign": "-",
+        "category": "one_time",
+        "cap_pool": null,
+        "span": {
+          "start": 86767,
+          "end": 86842,
+          "quote": "any net gains from disposed, abandoned or discontinued operations or assets"
+        },
+        "clause": "(c)(iii)",
+        "reason": "Net gains from discontinued operations have no vocabulary item. Excluded, which overstates covenant EBITDA.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "Net gains from discontinued operations have no vocabulary item. Excluded, which overstates covenant EBITDA.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      },
+      {
+        "item": "unmapped",
+        "sign": "-",
+        "category": "non_cash",
+        "cap_pool": null,
+        "span": {
+          "start": 86938,
+          "end": 87024,
+          "quote": "pre-tax mark-to-market gains on pension plans and settlement/curtailment gains thereon"
+        },
+        "clause": "(c)(iv)",
+        "reason": "Mirror of clause (b)(xiii); the same accounting condition applies.",
+        "review": {
+          "decision": "excluded_unsupported",
+          "note": "Mirror of clause (b)(xiii); the same accounting condition applies.",
+          "reviewer": null,
+          "reviewed_at": null
+        }
+      }
+    ],
+    "cap_pools": {
+      "clause_x": {
+        "kind": "percentage",
+        "fixed_amount": null,
+        "pct": "0.05",
+        "basis": "before_pool",
+        "span": {
+          "start": 85264,
+          "end": 85571,
+          "quote": "the aggregate amount of such charges permitted to be added back pursuant to this clause (x) during any four consecutive fiscal quarter period of the Borrower shall not exceed 5% of Consolidated EBITDA for such period (calculated without giving effect to the add-back of any item pursuant to this clause (x))"
+        },
+        "label": "clause (b)(x) restructuring cap"
+      },
+      "clause_xi": {
+        "kind": "fixed",
+        "fixed_amount": "25000000",
+        "pct": null,
+        "basis": null,
+        "span": {
+          "start": 85696,
+          "end": 85817,
+          "quote": "the aggregate amount of such charges permitted to be added back pursuant to this clause (xi) shall not exceed $25,000,000"
+        },
+        "label": "clause (b)(xi) pension termination cap"
+      }
+    }
+  },
+  "covenants": [
+    {
+      "id": "max_total_net_leverage",
+      "name": "Maximum Consolidated Total Net Leverage Ratio",
+      "type": "max_ratio",
+      "numerator": {
+        "items": [
+          "long_term_debt",
+          "current_portion_long_term_debt"
+        ],
+        "net_of_cash": {
+          "enabled": true,
+          "cap": null,
+          "item": "cash_and_equivalents",
+          "span": {
+            "start": 94903,
+            "end": 94955,
+            "quote": "minus (II) the amount of Qualified Cash at such date"
+          }
+        },
+        "span": {
+          "start": 94567,
+          "end": 94808,
+          "quote": "(I) (a) all obligations for borrowed money (including any obligations convertible into capital stock or other securities), (b) all obligations evidenced by bonds, debentures, notes or similar instruments and (c) all Capital Lease Obligations"
+        }
+      },
+      "denominator": {
+        "metric": "consolidated_ebitda"
+      },
+      "schedule": [
+        {
+          "from": "2022-09-30",
+          "threshold": "4.5"
+        }
+      ],
+      "test": {
+        "frequency": "quarterly",
+        "period": "ttm"
+      },
+      "span": {
+        "start": 546344,
+        "end": 546573,
+        "quote": "The Borrower will not permit the Consolidated Total Net Leverage Ratio, as at the last day of any period of four consecutive fiscal quarters of the Borrower which period ends on or after September 30, 2022 to exceed 4.50 to 1.00."
+      },
+      "reason": null,
+      "review": {
+        "decision": "edited",
+        "note": "The Acquisition Holiday raises the cap to 5.00x for four quarters after a qualifying acquisition. That is conditional on an event the language cannot express, so only the standing 4.50x threshold is recorded; if a holiday is in force the covenant is reported tighter than it is. Capital Lease Obligations are not separately reported and are omitted from the numerator, which understates net debt.",
+        "reviewer": null,
+        "reviewed_at": null
+      }
+    },
+    {
+      "id": "min_interest_coverage",
+      "name": "Minimum Consolidated Interest Coverage Ratio",
+      "type": "min_ratio",
+      "numerator": {
+        "metric": "consolidated_ebitda"
+      },
+      "denominator": {
+        "items": [
+          "interest_expense"
+        ],
+        "net_of_cash": null,
+        "span": {
+          "start": 90281,
+          "end": 90339,
+          "quote": "Consolidated Interest Expense paid in cash for such period"
+        }
+      },
+      "schedule": [
+        {
+          "from": "2022-09-30",
+          "threshold": "3.5"
+        }
+      ],
+      "test": {
+        "frequency": "quarterly",
+        "period": "ttm"
+      },
+      "span": {
+        "start": 547832,
+        "end": 548047,
+        "quote": "The Borrower will not permit the Consolidated Interest Coverage Ratio for any period of four consecutive fiscal quarters of the Borrower which period ends on or after September 30, 2022 to be less than 3.50 to 1.00."
+      },
+      "reason": null,
+      "review": {
+        "decision": "edited",
+        "note": "The covenant divides by Consolidated Interest Expense paid in cash. The mapped concept is accrued interest expense, which differs from cash interest; the mapping rationale records that.",
+        "reviewer": null,
+        "reviewed_at": null
+      }
+    }
+  ],
+  "definitions": {
+    "Consolidated EBITDA": {
+      "term": "Consolidated EBITDA",
+      "depth": 0,
+      "span": {
+        "start": 82735,
+        "end": 82762,
+        "quote": "\"Consolidated EBITDA\" means"
+      },
+      "text": null,
+      "resolved": true,
+      "references": []
+    },
+    "Consolidated Net Income": {
+      "term": "Consolidated Net Income",
+      "depth": 1,
+      "span": {
+        "start": 92263,
+        "end": 92294,
+        "quote": "\"Consolidated Net Income\" means"
+      },
+      "text": null,
+      "resolved": true,
+      "references": []
+    },
+    "Consolidated Interest Expense": {
+      "term": "Consolidated Interest Expense",
+      "depth": 1,
+      "span": {
+        "start": 90341,
+        "end": 90378,
+        "quote": "\"Consolidated Interest Expense\" means"
+      },
+      "text": null,
+      "resolved": true,
+      "references": []
+    },
+    "Consolidated Total Funded Indebtedness": {
+      "term": "Consolidated Total Funded Indebtedness",
+      "depth": 1,
+      "span": {
+        "start": 94424,
+        "end": 94470,
+        "quote": "\"Consolidated Total Funded Indebtedness\" means"
+      },
+      "text": null,
+      "resolved": true,
+      "references": []
+    },
+    "Consolidated Total Net Leverage Ratio": {
+      "term": "Consolidated Total Net Leverage Ratio",
+      "depth": 1,
+      "span": {
+        "start": 95187,
+        "end": 95232,
+        "quote": "\"Consolidated Total Net Leverage Ratio\" means"
+      },
+      "text": null,
+      "resolved": true,
+      "references": []
+    },
+    "Consolidated Interest Coverage Ratio": {
+      "term": "Consolidated Interest Coverage Ratio",
+      "depth": 1,
+      "span": {
+        "start": 90072,
+        "end": 90116,
+        "quote": "\"Consolidated Interest Coverage Ratio\" means"
+      },
+      "text": null,
+      "resolved": true,
+      "references": []
+    },
+    "Qualified Cash": {
+      "term": "Qualified Cash",
+      "depth": 2,
+      "span": {
+        "start": 190282,
+        "end": 190304,
+        "quote": "\"Qualified Cash\" means"
+      },
+      "text": null,
+      "resolved": true,
+      "references": []
+    }
+  },
+  "created_at": "2026-10-13T00:00:00",
+  "approved_by": "golden set (hand-written from the clause text)",
+  "approved_at": "2026-10-13T00:00:00"
+}

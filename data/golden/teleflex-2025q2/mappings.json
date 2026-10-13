@@ -1,0 +1,129 @@
+{
+  "test_date": "2025-06-29",
+  "note": "One mapping record per formula item. Only a verified record with a written rationale can feed a computable result. Three items have no usable concept and carry a sourced analyst value instead; each rationale names the filings checked and the direction of the resulting error.",
+  "records": [
+    {
+      "formula_item": "net_income",
+      "concept": "NetIncomeLoss",
+      "status": "verified",
+      "period_type": "duration",
+      "rationale": "Clause (a) starts from Consolidated Net Income, which excludes pre-acquisition and unconsolidated-affiliate income. NetIncomeLoss is net income attributable to the Borrower on a consolidated basis and is the closest reported concept; the contractual exclusions are not separately reported. TTM Q3 FY2024 111,004 + Q4 FY2024 (136,656) + Q1 FY2025 95,002 + Q2 FY2025 122,580 = 191,930 thousand.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "income_tax_expense",
+      "concept": "IncomeTaxExpenseBenefit",
+      "status": "verified",
+      "period_type": "duration",
+      "rationale": "Clause (b)(i) adds income tax expense. IncomeTaxExpenseBenefit is the reported provision and is signed, so a net benefit reduces covenant EBITDA as the clause intends.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "interest_expense",
+      "concept": "InterestExpenseNonoperating",
+      "status": "verified",
+      "period_type": "duration",
+      "rationale": "Clause (b)(ii) adds Consolidated Interest Expense, and the coverage covenant divides by Consolidated Interest Expense paid in cash. InterestExpenseNonoperating is accrued, not cash, interest and excludes the amortisation of debt discount and issuance costs that clause (b)(ii) also adds back. It is the only interest concept Teleflex reports for every quarter in the window, so it is used with that difference recorded: coverage is measured against accrued interest, which is the more conservative of the two for a minimum ratio when accrued exceeds cash interest.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "depreciation_amortization",
+      "concept": "DepreciationAndAmortization",
+      "status": "verified",
+      "period_type": "duration",
+      "rationale": "Clause (b)(iii) adds depreciation and amortisation including amortisation of intangibles and goodwill. DepreciationAndAmortization as Teleflex reports it in the cash flow statement includes intangible amortisation, which the clause requires.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "stock_based_compensation",
+      "concept": "ShareBasedCompensation",
+      "status": "verified",
+      "period_type": "duration",
+      "rationale": "Clause (b)(vii) adds non-cash stock based compensation for options and restricted stock. ShareBasedCompensation is the cash flow statement add-back for exactly that expense.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "restructuring_charges",
+      "concept": "RestructuringCharges",
+      "status": "verified",
+      "period_type": "duration",
+      "rationale": "Clause (b)(x) adds cash restructuring and restructuring related charges, capped at 5% of pre-clause EBITDA. RestructuringCharges is reported for all four quarters in the window: 285 + 940 + 1,422 + 1,253 = 3,900 thousand. The concept covers restructuring charges generally rather than only the cash subset the clause names, which would overstate the add-back; here it is far inside the cap either way.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "impairment_charges",
+      "concept": null,
+      "status": "verified",
+      "period_type": "duration",
+      "analyst_value": "253841000",
+      "rationale": "Clause (b)(v) adds any non-cash charge; for this period that is goodwill and intangible impairment. No single concept carries it and neither sparse concept has a fact in all four quarters, because Teleflex tags them only in quarters with a non-zero amount, so no TTM window can be built mechanically. Hand-summed from the filings: goodwill impairment 240,000 thousand in Q4 FY2024 (GoodwillImpairmentLoss, accession 0000096943-25-000031) and intangible impairment 5,724 thousand in Q4 FY2024 and 8,117 thousand in Q2 FY2025 (ImpairmentOfIntangibleAssetsExcludingGoodwill, accessions 0000096943-26-000019 and 0000096943-26-000095), with nil reported in Q3 FY2024 and Q1 FY2025. Total 253,841 thousand.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "transaction_costs",
+      "concept": null,
+      "status": "verified",
+      "period_type": "duration",
+      "analyst_value": "0",
+      "rationale": "Clause (b)(iv) adds charges incurred in connection with acquisitions, investments, dispositions and refinancings. Teleflex tags no acquisition-related cost concept at all and its four reports covering this window separately quantify none, so nothing can be sourced. Recorded as nil, which understates covenant EBITDA if such charges exist and therefore never flatters the covenant.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "other_non_cash_gains",
+      "concept": null,
+      "status": "verified",
+      "period_type": "duration",
+      "analyst_value": "0",
+      "rationale": "Clause (c)(ii) deducts non-cash income or gains. OtherNoncashIncomeExpense is a net concept Teleflex last reported in 2012, and no gain of this kind is separately quantified in the four reports covering this window. Recorded as nil. Unlike the add-backs, a nil deduction overstates covenant EBITDA, so this is the one analyst value here that is not conservative, and it is flagged as a limitation rather than treated as a measurement.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "long_term_debt",
+      "concept": "LongTermDebtNoncurrent",
+      "status": "verified",
+      "period_type": "instant",
+      "rationale": "Consolidated Total Funded Indebtedness clause (I)(a)-(b) covers borrowed money and notes. LongTermDebtNoncurrent at 2025-06-29 is 1,801,645 thousand. Capital Lease Obligations under clause (I)(c) are not separately reported and are omitted, which understates net debt.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "current_portion_long_term_debt",
+      "concept": "LongTermDebtCurrent",
+      "status": "verified",
+      "period_type": "instant",
+      "rationale": "The current portion of funded debt is within clause (I)(a) because the definition covers obligations whether current or long term. LongTermDebtCurrent at 2025-06-29 is 100,000 thousand.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    },
+    {
+      "formula_item": "cash_and_equivalents",
+      "concept": "CashAndCashEquivalentsAtCarryingValue",
+      "status": "verified",
+      "period_type": "instant",
+      "rationale": "Qualified Cash is unrestricted and unencumbered cash and cash equivalents, netted without a cap. CashAndCashEquivalentsAtCarryingValue excludes restricted cash, which matches the definition; whether any of it is encumbered is not reported, so the netting may be slightly generous.",
+      "mapping_version": 1,
+      "decided_by": "golden set",
+      "decided_at": "2026-10-13T00:00:00"
+    }
+  ]
+}

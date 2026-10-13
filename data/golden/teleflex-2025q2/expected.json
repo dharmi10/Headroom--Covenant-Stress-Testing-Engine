@@ -1,0 +1,135 @@
+{
+  "deal_id": "teleflex-2025q2",
+  "test_date": "2025-06-29",
+  "tight_band": "0.15",
+  "net_debt": "1647948000",
+  "note": "Computed longhand from the TTM figures, independently of the evaluator. S0 and S1 are identical because the agreement permits no pro forma add-back: there are no projected cost savings to remove.",
+  "scenarios": {
+    "S0": {
+      "e_outside_pools": "653274000",
+      "pool_cap": "32663700.00",
+      "pool_requested": "3900000",
+      "pool_allowed": "3900000",
+      "pool_binding": false,
+      "ebitda": "657174000",
+      "covenants": {
+        "max_total_net_leverage": {
+          "threshold": "4.50",
+          "net_debt": "1647948000",
+          "ratio": "2.507628116754466853527376311296551598207",
+          "ratio_display": "2.51",
+          "cushion": "0.4427493073878962547716941530452107559540",
+          "cushion_display": "0.4427",
+          "debt_capacity": "1309335000.00",
+          "headroom_ebitda": "290963333.3333333333333333333333333333333",
+          "verdict": "PASS"
+        },
+        "min_interest_coverage": {
+          "threshold": "3.50",
+          "interest": "79902000",
+          "ratio": "8.224750319140947660884583614928287151761",
+          "ratio_display": "8.22",
+          "cushion": "0.5744551671246884386783408960184060842334",
+          "cushion_display": "0.5745",
+          "headroom_ebitda": "377517000.00",
+          "verdict": "PASS"
+        }
+      }
+    },
+    "S1": {
+      "e_outside_pools": "653274000",
+      "pool_cap": "32663700.00",
+      "pool_requested": "3900000",
+      "pool_allowed": "3900000",
+      "pool_binding": false,
+      "ebitda": "657174000",
+      "covenants": {
+        "max_total_net_leverage": {
+          "threshold": "4.50",
+          "net_debt": "1647948000",
+          "ratio": "2.507628116754466853527376311296551598207",
+          "ratio_display": "2.51",
+          "cushion": "0.4427493073878962547716941530452107559540",
+          "cushion_display": "0.4427",
+          "debt_capacity": "1309335000.00",
+          "headroom_ebitda": "290963333.3333333333333333333333333333333",
+          "verdict": "PASS"
+        },
+        "min_interest_coverage": {
+          "threshold": "3.50",
+          "interest": "79902000",
+          "ratio": "8.224750319140947660884583614928287151761",
+          "ratio_display": "8.22",
+          "cushion": "0.5744551671246884386783408960184060842334",
+          "cushion_display": "0.5745",
+          "headroom_ebitda": "377517000.00",
+          "verdict": "PASS"
+        }
+      }
+    },
+    "S2": {
+      "e_outside_pools": "653274000",
+      "pool_cap": "32663700.00",
+      "pool_requested": "0",
+      "pool_allowed": "0",
+      "pool_binding": false,
+      "ebitda": "653274000",
+      "covenants": {
+        "max_total_net_leverage": {
+          "threshold": "4.50",
+          "net_debt": "1647948000",
+          "ratio": "2.522598480882447487577953508022667364689",
+          "ratio_display": "2.52",
+          "cushion": "0.4394225598039005583160103315505183634024",
+          "cushion_display": "0.4394",
+          "debt_capacity": "1291785000.00",
+          "headroom_ebitda": "287063333.3333333333333333333333333333333",
+          "verdict": "PASS"
+        },
+        "min_interest_coverage": {
+          "threshold": "3.50",
+          "interest": "79902000",
+          "ratio": "8.175940527145753548096418112187429601262",
+          "ratio_display": "8.18",
+          "cushion": "0.5719146942936654451271595073430138043149",
+          "cushion_display": "0.5719",
+          "headroom_ebitda": "373617000.00",
+          "verdict": "PASS"
+        }
+      }
+    },
+    "S3": {
+      "e_outside_pools": "376925000",
+      "pool_cap": "18846250.00",
+      "pool_requested": "0",
+      "pool_allowed": "0",
+      "pool_binding": false,
+      "ebitda": "376925000",
+      "covenants": {
+        "max_total_net_leverage": {
+          "threshold": "4.50",
+          "net_debt": "1647948000",
+          "ratio": "4.372084632221264177223585593951051270147",
+          "ratio_display": "4.37",
+          "cushion": "0.0284256372841635161725365346775441621896",
+          "cushion_display": "0.0284",
+          "debt_capacity": "48214500.00",
+          "headroom_ebitda": "10714333.3333333333333333333333333333333",
+          "verdict": "TIGHT"
+        },
+        "min_interest_coverage": {
+          "threshold": "3.50",
+          "interest": "79902000",
+          "ratio": "4.717341243022702810943405671948136467172",
+          "ratio_display": "4.72",
+          "cushion": "0.2580566425681501624991709225973336870730",
+          "cushion_display": "0.2581",
+          "headroom_ebitda": "97268000.00",
+          "verdict": "PASS"
+        }
+      }
+    }
+  },
+  "adjustment_dependence": "0.4264456597491684089754007310088347986987",
+  "adjustment_dependence_display": "0.4264"
+}

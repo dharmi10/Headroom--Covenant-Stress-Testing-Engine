@@ -1,0 +1,14 @@
+{
+  "deal_id": "teleflex-2025q2",
+  "borrower": "Teleflex Incorporated",
+  "ticker": "TFX",
+  "cik": "0000096943",
+  "agreement": "Third Amended and Restated Credit Agreement dated November 4, 2022, as amended by Amendment No. 2 dated June 24, 2025",
+  "exhibit_url": "https://www.sec.gov/Archives/edgar/data/96943/000009694325000107/ex101to6-27x20258xkrecredi.htm",
+  "exhibit_accession": "0000096943-25-000107",
+  "exhibit_form": "8-K",
+  "exhibit_filed": "2025-06-30",
+  "test_date": "2025-06-29",
+  "fiscal_period": "Q2 2025",
+  "notes": "Chosen because the agreement uses only constructs the formula language supports: a percentage cap measured before its own pool on clause (b)(x), a fixed cap on clause (b)(xi), net debt with uncapped cash netting, and flat thresholds on both maintenance covenants."
+}

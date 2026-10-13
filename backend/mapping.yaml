@@ -1,0 +1,101 @@
+# Candidate us-gaap concepts per formula item.
+#
+# A candidate is a suggestion and nothing more. An available concept is not
+# necessarily the contractual item: "interest expense" in a credit agreement
+# may be wider or narrower than any single reported concept. Each deal gets its
+# own mapping record per item, and only a record an analyst marked `verified`
+# with a written rationale can feed a computable result.
+#
+# Order matters: the first concept with usable facts is proposed first.
+
+items:
+  net_income:
+    period_type: duration
+    candidates: [NetIncomeLoss, ProfitLoss]
+
+  interest_expense:
+    period_type: duration
+    candidates:
+      - InterestExpenseNonoperating
+      - InterestExpense
+      - InterestExpenseDebt
+      - InterestIncomeExpenseNet
+
+  income_tax_expense:
+    period_type: duration
+    candidates: [IncomeTaxExpenseBenefit]
+
+  depreciation_amortization:
+    period_type: duration
+    candidates:
+      - DepreciationDepletionAndAmortization
+      - DepreciationAmortizationAndAccretionNet
+      - DepreciationAndAmortization
+      - Depreciation
+
+  stock_based_compensation:
+    period_type: duration
+    candidates: [ShareBasedCompensation, AllocatedShareBasedCompensationExpense]
+
+  restructuring_charges:
+    period_type: duration
+    candidates: [RestructuringCharges, RestructuringSettlementAndImpairmentProvisions]
+
+  impairment_charges:
+    period_type: duration
+    candidates:
+      - GoodwillImpairmentLoss
+      - AssetImpairmentCharges
+      - ImpairmentOfIntangibleAssetsExcludingGoodwill
+
+  transaction_costs:
+    period_type: duration
+    candidates: [BusinessCombinationAcquisitionRelatedCosts]
+
+  run_rate_cost_savings:
+    period_type: duration
+    candidates: []
+    note: >-
+      No XBRL concept exists for projected cost savings. The item is analyst
+      input with a source note, or it stays unavailable and the contractual
+      scenario reports missing_analyst_input.
+
+  other_non_cash_charges:
+    period_type: duration
+    candidates: [OtherNoncashIncomeExpense]
+
+  gain_on_asset_sales:
+    period_type: duration
+    candidates:
+      - GainLossOnSaleOfPropertyPlantEquipment
+      - GainLossOnDispositionOfAssets1
+      - GainLossOnSaleOfBusiness
+
+  other_non_cash_gains:
+    period_type: duration
+    candidates: [OtherNoncashIncomeExpense]
+
+  long_term_debt:
+    period_type: instant
+    candidates: [LongTermDebtNoncurrent, LongTermDebt]
+
+  current_portion_long_term_debt:
+    period_type: instant
+    candidates: [LongTermDebtCurrent]
+
+  short_term_borrowings:
+    period_type: instant
+    candidates: [ShortTermBorrowings, OtherShortTermBorrowings, LinesOfCreditCurrent]
+
+  finance_lease_liabilities:
+    period_type: instant
+    candidates:
+      - FinanceLeaseLiability
+      - FinanceLeaseLiabilityNoncurrent
+      - CapitalLeaseObligations
+
+  cash_and_equivalents:
+    period_type: instant
+    candidates:
+      - CashAndCashEquivalentsAtCarryingValue
+      - CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
