@@ -64,6 +64,25 @@ def test_typographic_characters_are_normalised():
     assert html_to_text(html) == '"Consolidated EBITDA" - the Borrower\'s'
 
 
+def test_cp1252_control_characters_become_the_quotes_they_stand_for():
+    """A filing served as cp1252 and decoded as Latin-1 upstream arrives with
+    U+0093 where a left double quote belongs. Those code points are control
+    characters that never occur in prose, and leaving them alone is not
+    neutral: every defined term is announced by a quotation mark, so the
+    definition index of such a document is empty. Found on Lantheus Holdings'
+    2024 credit agreement."""
+    raw = "<p>Consolidated EBITDA means the Borrowers income</p>"
+    assert html_to_text(raw) == "\"Consolidated EBITDA\" means the Borrower's income"
+
+
+def test_a_document_full_of_control_characters_still_yields_its_definitions():
+    text = normalise(
+        "<p>Consolidated EBITDA means net income.</p>"
+        "<p>Net Income means the net income of the Borrower.</p>"
+    ).text
+    assert set(definition_index(text)) == {"Consolidated EBITDA", "Net Income"}
+
+
 def test_the_source_hash_covers_the_normalised_text_not_the_markup():
     first = normalise("<p>a clause</p>")
     second = normalise('<div style="color:red"><span>a clause</span></div>')
@@ -100,6 +119,34 @@ def test_the_financial_covenant_section_is_located_and_names_both_ratios(agreeme
 def test_a_missing_definition_raises_rather_than_guessing(agreement):
     with pytest.raises(LocationError):
         find_definition(agreement, "Consolidated Fictional Ratio")
+
+
+def test_a_definition_introduced_by_a_colon_is_found():
+    """One house style writes the headword, a colon, then the definition,
+    with no "means" anywhere. Found on Lantheus Holdings' 2024 agreement,
+    where it left the definition index with two entries out of several
+    hundred."""
+    text = normalise(
+        '<p>"Consolidated EBITDA": with respect to any Person for any period, '
+        "the Consolidated Net Income of such Person.</p>"
+    ).text
+    assert "Consolidated EBITDA" in definition_index(text)
+
+
+def test_a_term_wrapped_across_a_line_break_is_still_one_term():
+    """Filers break the headword mid-term, so the quoted text spans two lines.
+    The term is indexed under its single-line name."""
+    text = normalise('<p>"Consolidated<br/>EBITDA" means net income.</p>').text
+    assert "\n" in text  # the break really is in the text
+    assert "Consolidated EBITDA" in definition_index(text)
+
+
+def test_a_quoted_phrase_followed_by_a_colon_is_not_a_definition():
+    """The colon form has to stay narrow, or every quoted heading in the
+    document becomes a defined term. A capitalised value after the colon is
+    a list item, not a definition."""
+    text = normalise('<p>"Borrower": LANTHEUS MEDICAL IMAGING, INC., a corporation</p>').text
+    assert "Borrower" not in definition_index(text)
 
 
 def test_an_agreement_with_no_definitions_cannot_be_located():

@@ -17,8 +17,24 @@ from dataclasses import dataclass
 
 #: ``"Consolidated EBITDA" means`` and its variants. The normaliser has already
 #: turned typographic quotes into straight ones.
+#:
+#: Two things here are not obvious, and both came from real agreements that the
+#: first version of this pattern read as having no definitions at all:
+#:
+#: * **The verb may be a colon.** One house style writes ``"Consolidated
+#:   EBITDA": with respect to any Person for any period, ...`` rather than
+#:   ``means``. A colon is only accepted when a lower-case word follows it, so
+#:   ``"Borrower": LANTHEUS MEDICAL IMAGING, INC.`` and a quoted phrase that
+#:   merely ends a sentence do not masquerade as definitions.
+#: * **The term may contain a newline.** Filers wrap the headword across a line
+#:   break mid-term, so ``"Consolidated\nEBITDA"`` is one term written over two
+#:   lines. :func:`_clean_term` collapses the whitespace, so the term is
+#:   indexed under its single-line name.
+#:
+#: See docs/evaluation/generalisation.md for what each change was found on.
 DEFINITION_RE = re.compile(
-    r'"(?P<term>[A-Z][^"\n]{1,120}?)"\s*(?P<verb>means|shall mean|has the meaning)',
+    r'"(?P<term>[A-Z][^"]{1,120}?)"\s*'
+    r'(?:(?P<verb>means|shall mean|has the meaning)|:\s+(?=[a-z]))',
 )
 
 #: Article and section headings, used to bound a search.

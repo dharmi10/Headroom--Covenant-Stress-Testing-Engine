@@ -36,7 +36,26 @@ DROP_TAGS = frozenset({"script", "style", "head", "title", "ix:header"})
 
 #: Typographic characters filers use that have plain equivalents. Normalising
 #: them means a quote drafted from the text matches the text.
+#:
+#: The C1 block (U+0080-U+009F) is in here because filers really do serve it.
+#: Those code points are control characters that never occur in prose: when a
+#: filing contains them, cp1252 punctuation has been decoded as Latin-1
+#: somewhere upstream, and U+0093 is a left double quote that lost its way.
+#: Leaving them alone is not neutral - every defined term in the agreement is
+#: announced by a quotation mark, so a document full of U+0093 has, as far as
+#: the definition locator is concerned, no definitions at all. Found on
+#: Lantheus Holdings' 2024 credit agreement, where it reduced the definition
+#: index from several hundred terms to zero. See docs/evaluation/generalisation.md.
 TRANSLATIONS = {
+    "": "'",
+    "": "'",
+    "": '"',
+    "": '"',
+    "": "-",
+    "": "-",
+    "": "-",
+    "": "...",
+    " ": " ",
     " ": " ",
     " ": " ",
     " ": " ",
