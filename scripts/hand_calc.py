@@ -55,43 +55,65 @@ COVERAGE_FLOOR = D("3.50")
 TIGHT_BAND = D("0.15")
 RESTRUCTURING_CAP_PCT = D("0.05")
 
-# Which categories each scenario keeps.
-#   standard : income tax, interest, depreciation and amortisation
-#   non_cash : stock compensation, the clause (b)(v) impairment add-back,
-#              the clause (c)(ii) non-cash gain deduction
-#   one_time : transaction costs, restructuring (capped)
-#   pro_forma: none - this agreement permits no projected cost savings
+# The add-back taxonomy, applied to this agreement's clauses by hand.
+#
+#   standard          (b)(i) income tax, (b)(ii) interest, (b)(iii) D&A
+#   accepted_non_cash (b)(v) impairment, (b)(vii) stock compensation,
+#                     (c)(ii) non-cash gains (a deduction)
+#   one_time          (b)(iv) transaction costs - the filings quantify none,
+#                     and there is no concept to test for recurrence
+#   aggressive_recurring
+#                     (b)(x) cash restructuring charges, capped at 5%.
+#                     Teleflex reported RestructuringCharges in all four of
+#                     the last four fiscal years - FY2021 14,999,000,
+#                     FY2022 18,802,000, FY2023 4,224,000, FY2024 14,157,000 -
+#                     so on a 3-of-4 threshold this "one-time" add-back is a
+#                     recurring cost of doing business. Verified by hand from
+#                     companyfacts; see docs/evaluation/recurrence.md.
+#   aggressive_pro_forma
+#                     none: this agreement permits no projected cost savings
 STANDARD = INCOME_TAX + INTEREST + DEP_AMORT
-NON_CASH = STOCK_COMP + IMPAIRMENT - NON_CASH_GAINS
+ACCEPTED_NON_CASH = STOCK_COMP + IMPAIRMENT - NON_CASH_GAINS
 ONE_TIME_UNCAPPED = TRANSACTION_COSTS
+#: The capped pool holds only clause (b)(x), which recurrence makes aggressive.
+POOL_IS_AGGRESSIVE_RECURRING = True
+
+#: Which categories each scenario keeps.
+SCENARIOS = {
+    "S0": ("standard", "accepted_non_cash", "one_time", "aggressive_recurring",
+           "aggressive_pro_forma"),
+    "S1": ("standard", "accepted_non_cash", "one_time", "aggressive_recurring"),
+    "S2": ("standard", "accepted_non_cash", "one_time"),
+    "S3": ("standard", "accepted_non_cash"),
+}
 
 
-def scenario(keep_non_cash: bool, keep_one_time: bool) -> dict[str, object]:
+def scenario(keeps: tuple[str, ...]) -> dict[str, object]:
     """Recalculate from scratch, exactly as the agreement reads."""
     outside_pool = NET_INCOME + STANDARD
-    if keep_non_cash:
-        outside_pool += NON_CASH
-    if keep_one_time:
+    if "accepted_non_cash" in keeps:
+        outside_pool += ACCEPTED_NON_CASH
+    if "one_time" in keeps:
         outside_pool += ONE_TIME_UNCAPPED
 
     # Clause (b)(x): 5% of Consolidated EBITDA calculated without giving
-    # effect to the add-back of any item pursuant to that clause.
-    if keep_one_time:
-        cap = RESTRUCTURING_CAP_PCT * outside_pool
-        effective_cap = max(cap, D(0))
-        allowed = min(RESTRUCTURING, effective_cap)
-    else:
-        cap = RESTRUCTURING_CAP_PCT * outside_pool
-        effective_cap = max(cap, D(0))
-        allowed = D(0)
+    # effect to the add-back of any item pursuant to that clause. The cap is
+    # computed in every scenario; what changes is whether the pool has an item
+    # in it at all.
+    pool_category = "aggressive_recurring" if POOL_IS_AGGRESSIVE_RECURRING else "one_time"
+    pool_in_scope = pool_category in keeps
+    cap = RESTRUCTURING_CAP_PCT * outside_pool
+    effective_cap = max(cap, D(0))
+    requested = RESTRUCTURING if pool_in_scope else D(0)
+    allowed = min(requested, effective_cap) if pool_in_scope else D(0)
 
     ebitda = outside_pool + allowed
     return {
         "e_outside_pools": str(outside_pool),
         "pool_cap": str(cap),
-        "pool_requested": str(RESTRUCTURING if keep_one_time else D(0)),
+        "pool_requested": str(requested),
         "pool_allowed": str(allowed),
-        "pool_binding": bool(keep_one_time and RESTRUCTURING > effective_cap),
+        "pool_binding": bool(pool_in_scope and requested > effective_cap),
         "ebitda": str(ebitda),
         "_ebitda": ebitda,
     }
@@ -146,12 +168,7 @@ def min_ratio(ebitda: Decimal, interest: Decimal) -> dict[str, object]:
 def main() -> None:
     net_debt = LT_DEBT + CURRENT_DEBT - CASH
 
-    scenarios = {
-        "S0": scenario(keep_non_cash=True, keep_one_time=True),
-        "S1": scenario(keep_non_cash=True, keep_one_time=True),
-        "S2": scenario(keep_non_cash=True, keep_one_time=False),
-        "S3": scenario(keep_non_cash=False, keep_one_time=False),
-    }
+    scenarios = {name: scenario(keeps) for name, keeps in SCENARIOS.items()}
 
     payload: dict[str, object] = {
         "deal_id": "teleflex-2025q2",
@@ -159,6 +176,7 @@ def main() -> None:
         "tight_band": str(TIGHT_BAND),
         "net_debt": str(net_debt),
         "basis": BASIS,
+        "taxonomy": "standard / accepted_non_cash / one_time / aggressive_recurring / aggressive_pro_forma",
         "note": (
             "Computed longhand from the TTM figures, independently of the "
             "evaluator. Every reported item is taken on one reporting basis, "
@@ -166,7 +184,10 @@ def main() -> None:
             "inside the window and the restated figures cannot produce a "
             "complete one. S0 and S1 are identical because the agreement "
             "permits no pro forma add-back: there are no projected cost "
-            "savings to remove."
+            "savings to remove, so S1 equals S0. S2 removes clause (b)(x) "
+            "restructuring, which the filings show recurring in four of the "
+            "last four fiscal years; S3 additionally removes clause (b)(iv) "
+            "transaction costs, recorded nil, so S3 equals S2."
         ),
         "scenarios": {},
     }
@@ -182,10 +203,16 @@ def main() -> None:
         }
 
     s0 = D(payload["scenarios"]["S0"]["ebitda"])  # type: ignore[index]
-    s3 = D(payload["scenarios"]["S3"]["ebitda"])  # type: ignore[index]
-    dependence = (s0 - s3) / s0
-    payload["adjustment_dependence"] = str(dependence)
-    payload["adjustment_dependence_display"] = str(dependence.quantize(D("0.0001")))
+    s2 = D(payload["scenarios"]["S2"]["ebitda"])  # type: ignore[index]
+    # Aggressive adjustment dependence is measured against S2, not S3: the
+    # question is how much rests on add-backs a lender would argue with, and a
+    # lender does not argue with impairment or amortisation.
+    aggressive = (s0 - s2) / s0
+    payload["aggressive_dependence"] = str(aggressive)
+    payload["aggressive_dependence_display"] = str(aggressive.quantize(D("0.0001")))
+    accepted = ACCEPTED_NON_CASH / s0
+    payload["accepted_non_cash_share"] = str(accepted)
+    payload["accepted_non_cash_share_display"] = str(accepted.quantize(D("0.0001")))
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -203,7 +230,8 @@ def main() -> None:
             lev["verdict"].ljust(6),
             "coverage", cov["ratio_display"].rjust(6) + "x", cov["verdict"],
         )
-    print("adjustment dependence", payload["adjustment_dependence_display"])
+    print("aggressive adjustment dependence", payload["aggressive_dependence_display"])
+    print("accepted non-cash share        ", payload["accepted_non_cash_share_display"])
     print("wrote", OUT)
 
 

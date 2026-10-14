@@ -62,15 +62,31 @@ export function categoryLabel(category: string): string {
   switch (category) {
     case "standard":
       return "Standard";
-    case "non_cash":
-      return "Non-cash";
+    case "accepted_non_cash":
+      return "Accepted non-cash";
     case "one_time":
       return "One-time";
-    case "pro_forma":
-      return "Pro forma";
+    case "aggressive_recurring":
+      return "Aggressive: recurring";
+    case "aggressive_pro_forma":
+      return "Aggressive: pro forma";
     default:
       return category;
   }
+}
+
+/* Stock compensation sits in accepted_non_cash because that is where the
+ * market puts it, not because it is obviously right: it is a real cost of
+ * paying people. The screens say so rather than filing it away silently. */
+export function categoryCaveat(category: string, item: string): string | null {
+  if (category === "accepted_non_cash" && item === "stock_based_compensation") {
+    return "arguably accepted - stock compensation is a real cost";
+  }
+  return null;
+}
+
+export function isAggressive(category: string): boolean {
+  return category === "aggressive_recurring" || category === "aggressive_pro_forma";
 }
 
 export function capRule(

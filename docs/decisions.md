@@ -124,6 +124,106 @@ and strips only trailing fractional zeros, which is exact and context-free.
 `tests/test_scenarios.py` runs the same evaluation at three precisions in three
 threads and asserts one hash.
 
+## The add-back taxonomy
+
+### The categories are the argument a lender has, not a description of the accounts
+
+The first version classified add-backs as `standard`, `non_cash`, `one_time`
+and `pro_forma`. That is a neutral description of where a charge sits in the
+accounts, and it made the tool answer the wrong question. Treating a $240m
+goodwill impairment as a "discretionary adjustment" put it in the same bucket
+as projected synergies, which no credit professional would accept: impairment
+and amortisation of acquired intangibles are add-backs a lender normally
+allows. The result was a headline claiming 32.7% of Teleflex's covenant EBITDA
+was discretionary and that the borrower sat 2.8% from a breach on plain
+EBITDA. Both numbers were arithmetically correct in the old taxonomy and both were misleading.
+
+The categories are now the ones that get argued about in a credit committee:
+
+| Category | What is in it | Who decides |
+| --- | --- | --- |
+| `standard` | interest, taxes, D&A | the clause |
+| `accepted_non_cash` | impairment, amortisation of acquired intangibles, stock-based compensation | the clause |
+| `one_time` | a charge the contract calls unusual that the filings do not show recurring | the clause, then the filings |
+| `aggressive_recurring` | a "one-time" charge reported in most of the last four fiscal years | **the filings** |
+| `aggressive_pro_forma` | projected cost savings, synergies, run-rate adjustments | the clause |
+
+**Stock-based compensation is the uncomfortable one.** It sits in
+`accepted_non_cash` because that is where the market puts it, not because it is
+obviously right - it is a real cost of paying people, settled in dilution
+rather than cash. `ARGUABLY_ACCEPTED_ITEMS` marks it and the UI says
+"arguably accepted" beside it rather than filing it away silently.
+
+**Why `one_time` and `aggressive_recurring` are both needed.** The scenario
+definitions require it: S2 removes the *recurring* "one-time" charges and keeps
+the genuinely non-recurring ones, so the two cannot be one category. A
+specification that named only four categories would have forced non-recurring
+one-time charges into either the aggressive bucket or the accepted one, and
+both would be wrong.
+
+### Recurrence is decided from the filings, deterministically
+
+Whether a charge is non-recurring is a question about the borrower's history,
+not about the contract, and it is answerable: `backend/edgar/recurrence.py`
+counts the fiscal years in which the mapped concept carries a **non-zero**
+annual fact, over the last four fiscal years ending on or before the test
+date. Three of four, by default, means it recurs. Both numbers are arguments
+(`min_years`, `window_years`), and every year's amount, form and accession
+number travels into the stored run.
+
+Two decisions inside that are worth stating:
+
+* **A charge of zero is not a charge.** Filers tag a sparse concept only in the
+  periods where the amount is non-zero, so an absent year and a zero year mean
+  the same thing. Counting zeros would make any consistently tagged concept
+  look like it recurs.
+* **Only fiscal years ending on or before the test date count.** A run is a
+  statement about what was knowable at that date. Without the cut-off, the same
+  run would change answer as later years were filed.
+
+The promotion itself happens in the evaluator, not in the formula: the clause's
+category is a property of the contract and never changes, while
+`ComponentLine.effective_category` records what it was judged as and
+`recurrence_evidence` records why. The contract says one thing and the history
+says another, and the result has to show both.
+
+### What it did to the golden deal, reported as it fell out
+
+Teleflex's clause (b)(x) adds back "cash restructuring and restructuring
+related charges". `RestructuringCharges` is reported in FY2021 (14,999,000),
+FY2022 (18,802,000), FY2023 (4,224,000) and FY2024 (14,157,000) - four of four
+- so the add-back is judged `aggressive_recurring`.
+
+| Figure | Old taxonomy | Credit taxonomy |
+| --- | ---: | ---: |
+| S0 Contractual | 894,045,000 | 894,045,000 |
+| S2 | 885,599,000 ("no one-time") | 885,599,000 (without aggressive) |
+| S3 | 601,382,000 (standard only) | 885,599,000 (conservative) |
+| Dependence | 32.7% on discretionary adjustments | **0.94% on aggressive adjustments** |
+| Accepted non-cash share | not reported | **31.8%** |
+| S3 leverage | 2.74x | 1.86x |
+
+**This is a much weaker finding, and it is the right one.** Teleflex's covenant
+EBITDA is heavily adjusted but not aggressively adjusted: 284m of the 894m is
+impairment and stock compensation, and 8.4m is the only add-back a lender would
+argue with. The deal passes on every scenario. The dramatic version of this
+case did not survive either the basis fix or the taxonomy fix, and nothing was
+tuned to keep it.
+
+It also says something about the sample: Teleflex was chosen because its
+agreement exercised the formula language, not because its EBITDA definition was
+aggressive. Finding a borrower whose definition *is* aggressive is a selection
+problem, and the honest way to report the current golden set is that it
+contains one conservative borrower.
+
+### Aggressive dependence is measured against S2, not S3
+
+`(S0 - S2) / S0`. The old metric measured against S3 and so counted every
+non-cash charge as a dependence. The accepted non-cash share is reported
+alongside it and is computed from the component contributions directly, because
+no pair of scenarios isolates that class - S2 still holds the genuinely
+non-recurring one-time charges.
+
 ## Reporting basis
 
 ### One reporting basis per window, and the restatement that forced it
@@ -302,6 +402,7 @@ and then the reason codes say which item and which scenarios it affected.
 | The Acquisition Holiday raising the leverage cap to 5.00x is not representable | Only the standing 4.50x threshold is recorded, so a borrower inside a holiday is reported tighter than it is |
 | Clause (b)(iv), (b)(vi), (b)(viii)–(ix), (b)(xi), (b)(xiii) and (c)(i), (c)(iii)–(iv) have no vocabulary item | Excluded with notes; the net effect understates covenant EBITDA on the add-back side and overstates it on the deduction side |
 | The cross-period claw-back proviso needs state across periods | Recorded as `unsupported` and excluded; overstates covenant EBITDA if such payments occurred |
+| A vocabulary change invalidates stored approvals | A formula version is JSON revalidated against the live schema, so renaming a category makes an approved version fail to load. That is the right behaviour for an approval gate - the reviewer approved categories that no longer exist - but it means `make clean` and a re-seed after a taxonomy change, and in a deployed system it would need a migration with re-approval |
 | Section location is regex-based | An unusual layout fails loudly, and the fallback is an analyst pasting the clause, never a second model call |
 | Whether the covenant is measured on continuing operations is unresolved | The run is built on the figures as originally reported and names that basis; on the other reading the figures are the wrong basis rather than a wrong calculation |
 | The restated basis cannot build this quarter's window at all | The choice is forced rather than argued: the filer reissued the 2024 year without reissuing the nine months, and restated the 2025 series twice |

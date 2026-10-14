@@ -433,7 +433,7 @@ def test_an_unsupported_construct_is_carried_through_as_unsupported():
             "clause": "(c)",
             "item": "unsupported",
             "sign": "+",
-            "category": "pro_forma",
+            "category": "aggressive_pro_forma",
             "cap_pool": "",
             "span": _span_for("shall not exceed $25,000,000"),
             "reason": "the savings must be realised within 24 months, which the format cannot express",

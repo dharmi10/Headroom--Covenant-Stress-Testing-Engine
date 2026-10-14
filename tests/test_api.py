@@ -341,7 +341,7 @@ def test_the_full_flow_reproduces_the_golden_result(client, golden_formula):
     for name in ("S0", "S1", "S2", "S3"):
         assert by_id[name]["ebitda"]["ebitda"] == expected["scenarios"][name]["ebitda"]
     assert result["headline_verdict"] == "PASS"
-    assert result["adjustment_dependence"] == expected["adjustment_dependence"]
+    assert result["aggressive_dependence"] == expected["aggressive_dependence"]
 
     # S3 strips every discretionary add-back, so leverage has to rise and the
     # cushion has to fall. Both are asserted as relations rather than as fixed

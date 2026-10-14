@@ -87,7 +87,7 @@ def test_projected_savings_with_no_analyst_value_only_affects_s0():
     formula = ebitda_formula(
         [
             component("interest_expense", "standard"),
-            component("run_rate_cost_savings", "pro_forma"),
+            component("run_rate_cost_savings", "aggressive_pro_forma"),
         ]
     )
     data = inputs(
@@ -101,7 +101,7 @@ def test_projected_savings_with_no_analyst_value_only_affects_s0():
     assert run.ebitda["S1"].value == Decimal("65")
     assert run.covenants["S0"]["max_total_leverage"].verdict == "NOT_COMPUTABLE"
     assert run.covenants["S1"]["max_total_leverage"].verdict != "NOT_COMPUTABLE"
-    assert run.adjustment_dependence is None
+    assert run.aggressive_dependence is None
 
 
 def test_an_unapproved_formula_cannot_produce_a_result():
@@ -173,8 +173,8 @@ def test_two_components_resolving_to_the_same_item_block_approval():
     twice, so approval has to stop it."""
     formula = ebitda_formula(
         [
-            component("other_non_cash_charges", "non_cash", clause="(xiii)"),
-            component("other_non_cash_charges", "non_cash", clause="(v)"),
+            component("other_non_cash_charges", "accepted_non_cash", clause="(xiii)"),
+            component("other_non_cash_charges", "accepted_non_cash", clause="(v)"),
         ]
     )
     version = formula_version(formula, [leverage_covenant("5.00")], status="draft")

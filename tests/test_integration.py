@@ -79,7 +79,7 @@ def test_the_deal_runs_from_ingestion_to_a_traced_result(seeded):
     assert deal.source_hash == version.source_hash
     assert version.status == "approved"
     assert payload["headline_verdict"] == "PASS"
-    assert payload["adjustment_dependence"] == expected["adjustment_dependence"]
+    assert payload["aggressive_dependence"] == expected["aggressive_dependence"]
 
     by_id = {scenario["id"]: scenario for scenario in payload["scenarios"]}
     for name, want in expected["scenarios"].items():
@@ -175,18 +175,25 @@ def test_a_later_quarter_fails_closed_rather_than_guessing(seeded):
     assert any("cannot be reused for 2025-12-31" in (note or "") for note in notes)
 
     # Every scenario declines, each naming the item that stopped it. The three
-    # that need the analyst-valued clauses report missing_analyst_input; S3
-    # needs only the standard adjustments, but depreciation at this date can
-    # only be derived as the restated year minus the originally reported nine
-    # months, which comes to a negative quarter, so it is refused as
-    # implausible_value rather than summed into a plausible-looking total.
+    # that need the analyst-valued clauses report missing_analyst_input. Under
+    # the credit taxonomy even S3 needs them, because impairment is accepted
+    # non-cash rather than discretionary. S3 also hits a second wall:
+    # depreciation at this date can only be derived as the restated year minus
+    # the originally reported nine months, which comes to a negative quarter,
+    # so it is refused as implausible_value rather than summed into a
+    # plausible-looking total. Both reasons are reported, not just the first.
     by_id = {scenario["id"]: scenario for scenario in payload["scenarios"]}
     for name in ("S0", "S1", "S2", "S3"):
         assert by_id[name]["ebitda"]["ebitda"] is None, name
         assert by_id[name]["ebitda"]["reasons"], name
     s3_codes = {reason["code"] for reason in by_id["S3"]["ebitda"]["reasons"]}
-    assert s3_codes == {"implausible_value"}
-    s3_items = {reason["item"] for reason in by_id["S3"]["ebitda"]["reasons"]}
+    assert "implausible_value" in s3_codes
+    assert s3_codes <= {"implausible_value", "missing_analyst_input"}
+    s3_items = {
+        reason["item"]
+        for reason in by_id["S3"]["ebitda"]["reasons"]
+        if reason["code"] == "implausible_value"
+    }
     assert s3_items == {"depreciation_amortization"}
     leverage = next(
         covenant

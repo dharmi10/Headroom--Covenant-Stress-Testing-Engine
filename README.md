@@ -42,28 +42,59 @@ Teleflex Incorporated, TTM to 29 June 2025, against its Third Amended and
 Restated Credit Agreement. Every figure is built from the filings **as
 originally reported** — see [One basis per window](#one-basis-per-window).
 
-| Scenario | Covenant EBITDA | Leverage | Cushion | Coverage | Verdict |
-| --- | ---: | ---: | ---: | ---: | --- |
-| **S0** Contractual | 894,045,000 | 1.84x | 59.0% | 11.18x | PASS |
-| **S1** No pro forma | 894,045,000 | 1.84x | 59.0% | 11.18x | PASS |
-| **S2** No one-time | 885,599,000 | 1.86x | 58.6% | 11.08x | PASS |
-| **S3** Standard adjustments only | 601,382,000 | 2.74x | 39.1% | 7.52x | PASS |
+| Scenario | | Covenant EBITDA | Leverage | Cushion | Coverage | Verdict |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| **S0** | Contractual | 894,045,000 | 1.84x | 59.0% | 11.18x | PASS |
+| **S1** | Without pro forma | 894,045,000 | 1.84x | 59.0% | 11.18x | PASS |
+| **S2** | Without aggressive adjustments | 885,599,000 | 1.86x | 58.6% | 11.08x | PASS |
+| **S3** | Conservative EBITDA | 885,599,000 | 1.86x | 58.6% | 11.08x | PASS |
 
 The covenant caps net leverage at 4.50x; net debt at the test date is
-1,647,948,000. On the agreement's own terms the borrower is comfortable, with
-59% of cushion.
+1,647,948,000.
 
-> **32.7% of that covenant EBITDA comes from discretionary adjustments** —
-> mostly a $240m non-cash goodwill impairment added back under the "any
-> non-cash charges" clause. Strip every discretionary add-back and leverage
-> rises by nine tenths of a turn, to 2.74x, and a third of the cushion is gone.
+> **Aggressive adjustment dependence: 0.94%. Accepted non-cash share: 31.8%.**
+>
+> Teleflex's covenant EBITDA is heavily adjusted but it is **not aggressively
+> adjusted**. Of the 894m, some 284m comes from impairment and stock
+> compensation — non-cash charges a lender normally accepts — and only 8.4m
+> from the one add-back a lender would argue with. Strip every aggressive
+> add-back and leverage moves from 1.84x to 1.86x. This borrower passes on
+> every scenario, and the honest headline is that there is nothing alarming
+> here.
 
-That gap is the entire point of the tool. Nothing about the business changed
-between the first row and the last. On this quarter the borrower passes either
-way, so the sensitivity is the finding rather than the verdict: a lender
-holding this agreement is insured against a 2.74x borrower, not a 1.84x one.
+That is a weaker finding than it first appeared, and it is reported as it falls
+out. Two earlier versions of this README claimed the borrower sat 2.8% from a
+breach on stripped-down EBITDA. Both were wrong, for different reasons:
 
----
+1. the TTM window mixed two reporting bases and contained a quarter with
+   negative depreciation — see [One basis per window](#one-basis-per-window);
+2. the taxonomy treated a $240m goodwill impairment as a discretionary
+   adjustment. A credit professional would not. Impairment and amortisation of
+   acquired intangibles are accepted add-backs, and counting them as aggressive
+   inflated the apparent risk by a factor of thirty.
+
+### The one aggressive add-back, and how it was found
+
+Clause (b)(x) adds back "cash restructuring and restructuring related charges",
+capped at 5% of EBITDA. The contract calls that one-time. The filings do not:
+
+| Fiscal year | `RestructuringCharges` | Filing |
+| --- | ---: | --- |
+| 2021 | 14,999,000 | `0000096943-24-000036` |
+| 2022 | 18,802,000 | `0000096943-25-000031` |
+| 2023 | 4,224,000 | `0000096943-26-000019` |
+| 2024 | 14,157,000 | `0000096943-25-000031` |
+
+Reported in **4 of the last 4 fiscal years**, so on the default threshold of 3
+of 4 the add-back is judged `aggressive_recurring` and S2 removes it. The test
+is deterministic, the threshold is configurable, and the years and accession
+numbers travel with the result rather than sitting behind an opinion
+(`backend/edgar/recurrence.py`).
+
+S0 and S1 are identical because this agreement permits no pro forma add-back:
+there are no projected cost savings to remove. S2 and S3 are identical because
+the only other one-time clause, transaction costs, is recorded nil. The ladder
+still has four rungs and the UI says which are empty.
 
 ## Running it
 
@@ -182,36 +213,46 @@ same reported concept, or a referenced definition nobody can find.
 
 ## The scenario ladder
 
-Each scenario keeps fewer categories of add-back. Every one is recalculated
-from the base term up, never by subtracting from the one before.
+The categories are the ones a credit professional argues about, not a neutral
+description of where a charge sits in the accounts.
+
+| Category | What is in it |
+| --- | --- |
+| `standard` | Interest, taxes, depreciation and amortisation. Nobody disputes these. |
+| `accepted_non_cash` | Impairment, amortisation of acquired intangibles, stock-based compensation. Normally allowed — though stock compensation is only *arguably* accepted, since it is a real cost of paying people, and the UI says so. |
+| `one_time` | A charge the contract calls unusual or non-recurring **and which the filings do not show recurring**. |
+| `aggressive_recurring` | A charge added back as "one-time" that the borrower has reported in most of the last four fiscal years. Decided from the filings, not from the clause. |
+| `aggressive_pro_forma` | Projected cost savings, synergies, run-rate adjustments: money the borrower has not earned. |
+
+Each scenario keeps fewer classes, and every one is recalculated from the base
+term up — never by subtracting from the one before.
 
 ```mermaid
 flowchart LR
     S0["<b>S0</b> Contractual<br/>894,045,000<br/>1.84x"]
-    S1["<b>S1</b> No pro forma<br/>894,045,000<br/>1.84x"]
-    S2["<b>S2</b> No one-time<br/>885,599,000<br/>1.86x"]
-    S3["<b>S3</b> Standard only<br/>601,382,000<br/>2.74x"]
+    S1["<b>S1</b> Without pro forma<br/>894,045,000<br/>1.84x"]
+    S2["<b>S2</b> Without aggressive<br/>885,599,000<br/>1.86x"]
+    S3["<b>S3</b> Conservative<br/>885,599,000<br/>1.86x"]
     S0 -->|"drop pro forma<br/>none in this agreement"| S1
-    S1 -->|"drop one-time<br/>minus 8,446,000"| S2
-    S2 -->|"drop non-cash<br/>minus 284,217,000"| S3
+    S1 -->|"drop recurring one-time<br/>minus 8,446,000"| S2
+    S2 -->|"drop remaining one-time<br/>nil here"| S3
 ```
 
 | Scenario | Keeps | Answers |
 | --- | --- | --- |
-| S0 | everything the agreement permits | What does the contract say? |
-| S1 | standard, non-cash, one-time | What if projected savings never arrive? |
-| S2 | standard, non-cash | What if the one-time charges recur? |
-| S3 | standard only | What does the business actually earn? |
+| S0 Contractual | everything the agreement permits | What does the agreement permit? |
+| S1 Without pro forma | all but projected savings | What if the projected savings never arrive? |
+| S2 Without aggressive adjustments | all but pro forma and recurring "one-time" | What survives if every aggressive add-back is disallowed? |
+| S3 Conservative EBITDA | standard and accepted non-cash | What does the business earn on terms a lender would accept? |
 
-S0 and S1 are identical here because this agreement permits no pro forma
-add-back: there are no projected cost savings to remove. The ladder still
-works; its first step is simply empty, and the UI says so.
+**Aggressive adjustment dependence** is `(S0 − S2) ÷ S0`. The accepted non-cash
+share is reported separately, because it is a different argument: a lender
+disputing a goodwill impairment add-back is making a much weaker case than one
+disputing projected synergies.
 
 **Why recalculating matters.** If a pool capped at 20 holds restructuring of 15
 and projected savings of 15, S0 allows 20 and S1 allows the full 15 — not 5.
 Subtracting the removed item from S0 would be wrong by 10.
-
----
 
 ## One basis per window
 
@@ -324,11 +365,12 @@ Clicking any figure opens its working, down to the filing it came from.
 | Determinism | 100% | One hash across 10 identical runs, across three decimal precisions in three threads, and across a fresh database |
 | Span fidelity | 0 fabricated spans accepted | Fabricated quotes, drifted offsets and out-of-range spans are all rejected |
 | Fail-closed | 100% | Each removed fact produces its correct reason code; no scenario falls back to zero |
+| Recurrence detection | Deterministic, evidence shown | A "one-time" add-back is promoted to aggressive only on a stated count of fiscal years, with every year's amount and accession number carried into the result |
 | Mapping coverage | Reported | 12 of 12 required items verified, of which 9 from reported concepts and 3 from sourced analyst values |
 | Reporting basis | Single basis per run | Every fact in the golden window carries one basis, no derived quarter is negative, and the snapshot rebuilds from the committed companyfacts |
 | Compiler semantic accuracy | Reported, **not yet measured** | `make measure RUNS=5` compiles each golden agreement five times and scores every clause on item, sign, category and cap rule, with run-to-run stability. It needs Anthropic credentials, so it is not part of the test suite, and no figure is claimed until it has run — see [`docs/evaluation/compiler.md`](docs/evaluation/compiler.md) |
 
-The suite is **200 tests** covering the arithmetic, the cap engine, XBRL
+The suite is **218 tests** covering the arithmetic, the cap engine, XBRL
 handling, the reporting basis, the compiler, the API and the golden deal end to
 end, including Hypothesis property tests for three evaluator invariants:
 removing a positive add-back never raises the cushion, a pool's allowance never
@@ -348,11 +390,13 @@ Teleflex tags impairment only in the quarters where the amount is non-zero, so
 no TTM window can be built mechanically, and the analyst values that filled the
 gap were sourced for the period ending 29 June 2025. S0, S1 and S2 report
 `missing_analyst_input` naming both dates rather than reusing a stale figure.
-S3 needs only the standard adjustments, but at this date depreciation can only
-be derived as the restated full year minus the originally reported nine months,
-which comes to a quarter of −33,230,000 — not a small number, but the signature
-of two figures that were never measured the same way. It is refused as
-`implausible_value`, and the covenant is reported NOT_COMPUTABLE with no ratio.
+S3 needs the same impairment value, because impairment is an accepted non-cash
+charge rather than a discretionary one, so it declines too. It also hits a
+second wall: at this date depreciation can only be derived as the restated full
+year minus the originally reported nine months, which comes to a quarter of
+−33,230,000 — not a small number, but the signature of two figures that were
+never measured the same way. It is refused as `implausible_value`, both reasons
+are reported, and the covenant is NOT_COMPUTABLE with no ratio.
 
 An earlier version answered this quarter with a confident BREACH built on that
 impossible quarter. Declining is the better answer.

@@ -4,7 +4,8 @@
   "tight_band": "0.15",
   "net_debt": "1647948000",
   "basis": "as_originally_reported",
-  "note": "Computed longhand from the TTM figures, independently of the evaluator. Every reported item is taken on one reporting basis, the figures as originally published, because a restatement falls inside the window and the restated figures cannot produce a complete one. S0 and S1 are identical because the agreement permits no pro forma add-back: there are no projected cost savings to remove.",
+  "taxonomy": "standard / accepted_non_cash / one_time / aggressive_recurring / aggressive_pro_forma",
+  "note": "Computed longhand from the TTM figures, independently of the evaluator. Every reported item is taken on one reporting basis, the figures as originally published, because a restatement falls inside the window and the restated figures cannot produce a complete one. S0 and S1 are identical because the agreement permits no pro forma add-back: there are no projected cost savings to remove, so S1 equals S0. S2 removes clause (b)(x) restructuring, which the filings show recurring in four of the last four fiscal years; S3 additionally removes clause (b)(iv) transaction costs, recorded nil, so S3 equals S2.",
   "scenarios": {
     "S0": {
       "e_outside_pools": "885599000",
@@ -100,37 +101,39 @@
       }
     },
     "S3": {
-      "e_outside_pools": "601382000",
-      "pool_cap": "30069100.00",
+      "e_outside_pools": "885599000",
+      "pool_cap": "44279950.00",
       "pool_requested": "0",
       "pool_allowed": "0",
       "pool_binding": false,
-      "ebitda": "601382000",
+      "ebitda": "885599000",
       "covenants": {
         "max_total_net_leverage": {
           "threshold": "4.50",
           "net_debt": "1647948000",
-          "ratio": "2.740268248800263393317392273130888520109",
-          "ratio_display": "2.74",
-          "cushion": "0.3910515002666081348183572726375803288647",
-          "cushion_display": "0.3911",
-          "debt_capacity": "1058271000.00",
-          "headroom_ebitda": "235171333.3333333333333333333333333333333",
+          "ratio": "1.860828659472289377020525090927157776827",
+          "ratio_display": "1.86",
+          "cushion": "0.5864825201172690273287722020161871607052",
+          "cushion_display": "0.5865",
+          "debt_capacity": "2337247500.00",
+          "headroom_ebitda": "519388333.3333333333333333333333333333333",
           "verdict": "PASS"
         },
         "min_interest_coverage": {
           "threshold": "3.50",
           "interest": "79945000",
-          "ratio": "7.522446682093939583463631246481956344987",
-          "ratio_display": "7.52",
-          "cushion": "0.5347258481298076763188788490510191525520",
-          "cushion_display": "0.5347",
-          "headroom_ebitda": "321574500.00",
+          "ratio": "11.07760335230470948777284383013321658640",
+          "ratio_display": "11.08",
+          "cushion": "0.6840471816250921692549336663659285974803",
+          "cushion_display": "0.6840",
+          "headroom_ebitda": "605791500.00",
           "verdict": "PASS"
         }
       }
     }
   },
-  "adjustment_dependence": "0.3273470574747356117421382592598806547769",
-  "adjustment_dependence_display": "0.3273"
+  "aggressive_dependence": "0.009446951775358063632143795893942698633738",
+  "aggressive_dependence_display": "0.0094",
+  "accepted_non_cash_share": "0.3179001056993775481099944633659379561431",
+  "accepted_non_cash_share_display": "0.3179"
 }

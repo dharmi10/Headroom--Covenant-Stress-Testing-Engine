@@ -51,6 +51,12 @@ COVERAGE_FLOOR = Decimal("3.50")
 TIGHT_BAND = Decimal("0.15")
 RESTRUCTURING_CAP_PCT = Decimal("0.05")
 
+#: A "one-time" charge reported in at least this many of the last N fiscal
+#: years is treated as recurring. Same thresholds the application defaults to,
+#: written out here rather than imported.
+RECURRENCE_MIN_YEARS = 3
+RECURRENCE_WINDOW = 4
+
 #: The concept each formula item is mapped to, per the golden mappings file.
 #: Written out here so the mapping under test is visible, not imported.
 DURATION_CONCEPTS = {
@@ -646,45 +652,116 @@ def main() -> int:
 
     required = required_items()
     if any(item not in ttm for item in required):
-        print("    cannot compute S3: a standard item did not resolve")
+        print("    cannot compute the standard class: an item did not resolve")
         return 1
 
-    s3 = sum((ttm[item] for item in required), Decimal(0))
+    # -- does the "one-time" restructuring charge actually recur? ----------
+    #
+    # Worked out here from the annual facts, independently of the application.
+    # A charge reported in at least 3 of the last 4 fiscal years is a cost of
+    # doing business whatever the clause calls it.
     print()
-    print("S3, standard adjustments only:")
+    print(RULE)
+    print("Recurrence of the clause (b)(x) restructuring add-back")
+    print(RULE)
+    annual = []
+    for row in rows_on_basis(rows_for(facts, DURATION_CONCEPTS["restructuring_charges"]), chosen):
+        start, end = date_of(row.get("start")), date_of(row.get("end"))
+        if start is None or end is None or end > TEST_DATE:
+            continue
+        if 350 <= (end - start).days + 1 <= 380:
+            annual.append((end, value_of(row), row.get("accn"), row.get("filed")))
+    # one figure per fiscal year, latest filing wins
+    by_year: dict = {}
+    for end, value, accn, filed in sorted(annual, key=lambda r: (r[0], str(r[3]))):
+        by_year[end] = (value, accn, filed)
+    years = sorted(by_year.items())[-RECURRENCE_WINDOW:]
+    reported = 0
+    for end, (value, accn, filed) in years:
+        mark = "reported" if value != 0 else "nil"
+        if value != 0:
+            reported += 1
+        print(f"    FY{end.year}  {value:>14,}  {mark:<9} {accn} filed {filed}")
+    recurs = reported >= RECURRENCE_MIN_YEARS
+    print(
+        "    reported in",
+        str(reported) + " of " + str(len(years)),
+        "fiscal years; threshold is",
+        str(RECURRENCE_MIN_YEARS) + " of " + str(RECURRENCE_WINDOW),
+        "->",
+        "RECURS, so the add-back is aggressive_recurring" if recurs
+        else "does not recur, so the add-back stays one_time",
+    )
+    if recurs:
+        note(
+            "clause (b)(x) restructuring is added back as one-time but was"
+            " reported in "
+            + str(reported)
+            + " of the last "
+            + str(len(years))
+            + " fiscal years"
+        )
+
+    # -- the scenario ladder under the credit taxonomy ---------------------
+    #
+    #   standard          interest, taxes, D&A
+    #   accepted_non_cash impairment, stock compensation, non-cash gains
+    #   one_time          transaction costs (nil here)
+    #   aggressive_recurring  restructuring, if the years above say so
+    #   aggressive_pro_forma  none in this agreement
+    standard = sum((ttm[item] for item in required), Decimal(0))
+    print()
+    print("Standard class (net income plus interest, taxes, D&A):")
     for item in required:
         print(("    " + item).ljust(38), f"{ttm[item]:>16,}")
-    print("  = S3 covenant EBITDA".ljust(38), f"{s3:>16,}")
+    print("  = standard".ljust(38), f"{standard:>16,}")
 
     non_cash_gains = Decimal(0)  # the golden set records this as a sourced nil
-    s2 = s3 + ttm["stock_based_compensation"] + impairment - non_cash_gains
+    accepted_non_cash = ttm["stock_based_compensation"] + impairment - non_cash_gains
     print()
-    print("S2, plus the non-cash class:")
-    print("    S3".ljust(38), f"{s3:>16,}")
+    print("Accepted non-cash class:")
     print("  + stock based compensation".ljust(38), f"{ttm['stock_based_compensation']:>16,}")
     print("  + impairment, clause (b)(v)".ljust(38), f"{impairment:>16,}")
     print("  - non-cash gains, recorded nil".ljust(38), f"{non_cash_gains:>16,}")
-    print("  = S2 covenant EBITDA".ljust(38), f"{s2:>16,}")
+    print("  = accepted non-cash".ljust(38), f"{accepted_non_cash:>16,}")
 
     transaction_costs = Decimal(0)  # also a sourced nil in the golden set
-    e_before_pool = s2 + transaction_costs
-    cap = RESTRUCTURING_CAP_PCT * e_before_pool
-    allowed = min(ttm["restructuring_charges"], max(cap, Decimal(0)))
-    s1 = e_before_pool + allowed
-    s0 = s1
+    pool_category = "aggressive_recurring" if recurs else "one_time"
+    keeps = {
+        "S0": ("standard", "accepted_non_cash", "one_time", "aggressive_recurring",
+               "aggressive_pro_forma"),
+        "S1": ("standard", "accepted_non_cash", "one_time", "aggressive_recurring"),
+        "S2": ("standard", "accepted_non_cash", "one_time"),
+        "S3": ("standard", "accepted_non_cash"),
+    }
+    ladder: dict[str, Decimal] = {}
     print()
-    print("S1 and S0, plus the one-time class:")
-    print("    S2".ljust(38), f"{s2:>16,}")
-    print("  + transaction costs, recorded nil".ljust(38), f"{transaction_costs:>16,}")
-    print("  = EBITDA before the clause (b)(x) pool".ljust(38), f"{e_before_pool:>16,}")
-    print("    cap, 5% of that".ljust(38), f"{cap:>16,}")
-    print("    restructuring requested".ljust(38), f"{ttm['restructuring_charges']:>16,}")
-    print(
-        "    allowed".ljust(38),
-        f"{allowed:>16,}",
-        "(cap binds)" if ttm["restructuring_charges"] > cap else "(cap does not bind)",
-    )
-    print("  = S1 = S0 covenant EBITDA".ljust(38), f"{s0:>16,}", "(no pro forma clause)")
+    print("The ladder, each rung recalculated from scratch:")
+    for name in ("S0", "S1", "S2", "S3"):
+        kept = keeps[name]
+        outside = standard
+        if "accepted_non_cash" in kept:
+            outside += accepted_non_cash
+        if "one_time" in kept:
+            outside += transaction_costs
+        cap = RESTRUCTURING_CAP_PCT * outside
+        in_scope = pool_category in kept
+        requested = ttm["restructuring_charges"] if in_scope else Decimal(0)
+        allowed = min(requested, max(cap, Decimal(0))) if in_scope else Decimal(0)
+        ladder[name] = outside + allowed
+        print(
+            "   ",
+            name,
+            "outside pool",
+            f"{outside:>15,}",
+            "cap",
+            f"{cap:>13,}",
+            "pool allowed",
+            f"{allowed:>12,}",
+            "=",
+            f"{ladder[name]:>15,}",
+        )
+    s0, s1, s2, s3 = (ladder[n] for n in ("S0", "S1", "S2", "S3"))
 
     net_debt = (
         balances["long_term_debt"]
@@ -729,9 +806,11 @@ def main() -> int:
             verdict.ljust(6),
             f"coverage {coverage:7.4f}x",
         )
-    dependence = (s0 - s3) / s0
+    dependence = (s0 - s2) / s0
+    accepted_share = accepted_non_cash / s0
     print()
-    print("    adjustment dependence = (S0 - S3) / S0 =", f"{dependence * 100:.4f}%")
+    print("    aggressive adjustment dependence = (S0 - S2) / S0 =", f"{dependence * 100:.4f}%")
+    print("    accepted non-cash share          =", f"{accepted_share * 100:.4f}%")
 
     # -- comparison --------------------------------------------------------
     print()
@@ -791,7 +870,12 @@ def main() -> int:
         compare("net debt", net_debt, expected["net_debt"])
         for name in ("S0", "S1", "S2", "S3"):
             compare(name + " EBITDA", results[name]["ebitda"], expected["scenarios"][name]["ebitda"])
-        compare("adjustment dependence", dependence, expected["adjustment_dependence"])
+        compare("aggressive dependence", dependence, expected["aggressive_dependence"])
+        compare(
+            "accepted non-cash share",
+            accepted_share,
+            expected["accepted_non_cash_share"],
+        )
         for name in ("S0", "S3"):
             covenant = expected["scenarios"][name]["covenants"]["max_total_net_leverage"]
             compare(name + " leverage", results[name]["leverage"], covenant["ratio"])

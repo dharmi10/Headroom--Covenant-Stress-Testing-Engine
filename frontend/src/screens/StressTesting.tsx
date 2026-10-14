@@ -42,16 +42,21 @@ export function StressTesting({
       <section className="panel">
         <div className="panel-head">
           <div>
-            <h2>Adjustment dependence</h2>
+            <h2>Aggressive adjustment dependence</h2>
             <p>
-              The share of contractual covenant EBITDA that comes from discretionary adjustments,
-              measured as (S0 − S3) ÷ S0. A high number does not mean the borrower is in trouble; it
-              means the cushion rests on adjustments rather than on earnings.
+              The share of contractual covenant EBITDA that rests on add-backs a lender would
+              argue with &mdash; projected savings, and &ldquo;one-time&rdquo; charges the
+              filings show recurring &mdash; measured as (S0 &minus; S2) &divide; S0. Accepted
+              non-cash charges are counted separately below, because impairment and
+              amortisation are normally allowed and lumping them in would overstate the case.
             </p>
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 26, fontWeight: 600 }}>
-              {percent(run.adjustment_dependence)}
+              {percent(run.aggressive_dependence)}
+            </div>
+            <div className="small muted">
+              accepted non-cash: {percent(run.accepted_non_cash_share)}
             </div>
             <div className="small muted">
               {contractual?.ebitda.ebitda

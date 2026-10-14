@@ -142,7 +142,7 @@ function headline(
       </>
     );
   }
-  const dependence = run.adjustment_dependence;
+  const dependence = run.aggressive_dependence;
   const word =
     leverage.verdict === "PASS" ? "Compliant" : leverage.verdict === "TIGHT" ? "Tight" : "In breach";
   return (
@@ -152,12 +152,12 @@ function headline(
       {dependence ? (
         <>
           {" "}
-          <b>{percent(dependence)}</b> of that covenant EBITDA comes from discretionary
-          adjustments
+          <b>{percent(dependence)}</b> of that covenant EBITDA rests on aggressive add-backs,
+          and <b>{percent(run.accepted_non_cash_share)}</b> on accepted non-cash charges
           {standardLeverage?.ratio ? (
             <>
-              ; on plain EBITDA the ratio is {ratio(standardLeverage.ratio)} and the cushion is{" "}
-              {percent(standardLeverage.cushion)}.
+              ; on conservative EBITDA the ratio is {ratio(standardLeverage.ratio)} and the
+              cushion is {percent(standardLeverage.cushion)}.
             </>
           ) : (
             "."

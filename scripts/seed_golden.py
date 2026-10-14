@@ -179,7 +179,11 @@ def _print_run(payload: dict) -> None:
             + "  "
             + ((leverage or {}).get("verdict") or "n/a")
         )
-    print("\n  adjustment dependence:", payload["adjustment_dependence_display"])
+    print("\n  aggressive dependence:", payload["aggressive_dependence_display"])
+    print("  accepted non-cash:    ", payload["accepted_non_cash_share_display"])
+    for row in payload.get("recurrence", []):
+        if row.get("recurs"):
+            print("  recurrence:           ", row["evidence"])
     print("  headline verdict:     ", payload["headline_verdict"])
     print("  reporting basis:      ", payload["reporting_basis"])
     print("  output hash:          ", payload["output_hash"])
@@ -193,8 +197,9 @@ def _compare_with_expected(payload: dict) -> None:
         got = by_id[name]["ebitda"]["ebitda"]
         if got != want["ebitda"]:
             mismatches.append(name + ": expected " + want["ebitda"] + ", got " + str(got))
-    if payload["adjustment_dependence"] != expected["adjustment_dependence"]:
-        mismatches.append("adjustment dependence differs from the hand calculation")
+    for key in ("aggressive_dependence", "accepted_non_cash_share"):
+        if payload[key] != expected[key]:
+            mismatches.append(key + " differs from the hand calculation")
     if mismatches:
         print("\n  MISMATCH against the hand calculation:")
         for line in mismatches:

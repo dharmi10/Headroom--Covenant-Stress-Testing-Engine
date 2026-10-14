@@ -207,8 +207,8 @@ def test_the_duplicate_concept_blocker_reaches_the_approval_gate():
     version = formula_version(
         ebitda_formula(
             [
-                component("other_non_cash_charges", "non_cash"),
-                component("other_non_cash_gains", "non_cash", sign="-"),
+                component("other_non_cash_charges", "accepted_non_cash"),
+                component("other_non_cash_gains", "accepted_non_cash", sign="-"),
             ]
         ),
         [leverage_covenant(), coverage_covenant()],

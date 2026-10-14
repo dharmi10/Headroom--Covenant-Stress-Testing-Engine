@@ -9,6 +9,69 @@
   ],
   "basis": "as_originally_reported",
   "basis_note": "Built from the figures as originally reported. The figures as restated resolve only 6 of 12 items, because a restatement falls inside the window and the filer did not reissue every period it affected.",
+  "recurrence": {
+    "restructuring_charges": {
+      "item": "restructuring_charges",
+      "concept": "RestructuringCharges",
+      "recurs": true,
+      "min_years": 3,
+      "window_years": 4,
+      "years_examined": 4,
+      "years_reported": 4,
+      "evidence": "RestructuringCharges is reported in 4 of the last 4 fiscal years (2021: 14999000, 2022: 18802000, 2023: 4224000, 2024: 14157000), so on a threshold of 3 of 4 it recurs",
+      "years": [
+        {
+          "fiscal_year_end": "2021-12-31",
+          "start": "2021-01-01",
+          "value": "14999000",
+          "reported": true,
+          "accession": "0000096943-24-000036",
+          "form": "10-K",
+          "filed": "2024-02-23"
+        },
+        {
+          "fiscal_year_end": "2022-12-31",
+          "start": "2022-01-01",
+          "value": "18802000",
+          "reported": true,
+          "accession": "0000096943-25-000031",
+          "form": "10-K",
+          "filed": "2025-02-28"
+        },
+        {
+          "fiscal_year_end": "2023-12-31",
+          "start": "2023-01-01",
+          "value": "4224000",
+          "reported": true,
+          "accession": "0000096943-26-000019",
+          "form": "10-K",
+          "filed": "2026-02-27"
+        },
+        {
+          "fiscal_year_end": "2024-12-31",
+          "start": "2024-01-01",
+          "value": "14157000",
+          "reported": true,
+          "accession": "0000096943-25-000031",
+          "form": "10-K",
+          "filed": "2025-02-28"
+        }
+      ],
+      "note": ""
+    },
+    "transaction_costs": {
+      "item": "transaction_costs",
+      "concept": null,
+      "recurs": false,
+      "min_years": 3,
+      "window_years": 4,
+      "years_examined": 0,
+      "years_reported": 0,
+      "evidence": "transaction_costs has no reported concept, so recurrence cannot be tested from the filings",
+      "years": [],
+      "note": "no reported concept to test"
+    }
+  },
   "items": {
     "cash_and_equivalents": {
       "item": "cash_and_equivalents",

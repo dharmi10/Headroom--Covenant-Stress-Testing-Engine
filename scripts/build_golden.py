@@ -80,13 +80,13 @@ COMPONENTS: list[tuple[str, str, str, str, str, str | None]] = [
         "one_time",
         None,
     ),
-    ("(b)(v)", "any non-cash charges, expenses or losses", "impairment_charges", "+", "non_cash", None),
+    ("(b)(v)", "any non-cash charges, expenses or losses", "impairment_charges", "+", "accepted_non_cash", None),
     (
         "(b)(vi)",
         "non-cash costs associated with inventory purchase price adjustments and in process research and development",
         "unmapped",
         "+",
-        "non_cash",
+        "accepted_non_cash",
         None,
     ),
     (
@@ -94,7 +94,7 @@ COMPONENTS: list[tuple[str, str, str, str, str, str | None]] = [
         "non-cash stock based compensation expense relating to stock options and restricted stock granted to employees and directors",
         "stock_based_compensation",
         "+",
-        "non_cash",
+        "accepted_non_cash",
         None,
     ),
     (
@@ -134,7 +134,7 @@ COMPONENTS: list[tuple[str, str, str, str, str, str | None]] = [
         "pre-tax mark-to-market losses on pension plans and settlement/curtailment losses thereon",
         "unmapped",
         "+",
-        "non_cash",
+        "accepted_non_cash",
         None,
     ),
     (
@@ -142,7 +142,7 @@ COMPONENTS: list[tuple[str, str, str, str, str, str | None]] = [
         "any cash payment made with respect to any non-cash charges added back in computing Consolidated EBITDA for any period pursuant to clauses (b)(v), (b)(vi) or (b)(vii) above",
         "unsupported",
         "-",
-        "non_cash",
+        "accepted_non_cash",
         None,
     ),
     (
@@ -153,7 +153,7 @@ COMPONENTS: list[tuple[str, str, str, str, str, str | None]] = [
         "one_time",
         None,
     ),
-    ("(c)(ii)", "non- cash income or gains", "other_non_cash_gains", "-", "non_cash", None),
+    ("(c)(ii)", "non- cash income or gains", "other_non_cash_gains", "-", "accepted_non_cash", None),
     (
         "(c)(iii)",
         "any net gains from disposed, abandoned or discontinued operations or assets",
@@ -167,7 +167,7 @@ COMPONENTS: list[tuple[str, str, str, str, str, str | None]] = [
         "pre-tax mark-to-market gains on pension plans and settlement/curtailment gains thereon",
         "unmapped",
         "-",
-        "non_cash",
+        "accepted_non_cash",
         None,
     ),
 ]

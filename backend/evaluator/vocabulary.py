@@ -92,24 +92,85 @@ NON_NEGATIVE_FLOW_ITEMS = frozenset(
     }
 )
 
-Category = Literal["standard", "non_cash", "one_time", "pro_forma"]
+# -- the add-back taxonomy ---------------------------------------------------
+#
+# The categories a credit professional actually argues about, rather than a
+# neutral description of where a charge sits in the accounts:
+#
+# * ``standard``          interest, taxes, depreciation and amortisation. The
+#                         "ITDA" of EBITDA. Nobody disputes these.
+# * ``accepted_non_cash`` impairment, amortisation of acquired intangibles and
+#                         stock-based compensation. Non-cash charges a lender
+#                         will normally accept being added back - though stock
+#                         compensation is only *arguably* accepted, since it is
+#                         a real economic cost, and the UI says so.
+# * ``one_time``          a charge the contract calls unusual or non-recurring
+#                         and which the filings do not show recurring.
+# * ``aggressive_recurring``
+#                         a charge added back as "one-time" that the borrower
+#                         has in fact reported in most of the last four fiscal
+#                         years. Not a category a drafter writes: it is decided
+#                         from the filings at run time by
+#                         ``backend/edgar/recurrence.py``, and a ``one_time``
+#                         component is promoted into it when the evidence says
+#                         so. The evidence travels with the result.
+# * ``aggressive_pro_forma``
+#                         projected cost savings, synergies and run-rate
+#                         adjustments: money the borrower has not earned.
+#
+# ``one_time`` and ``aggressive_recurring`` are both needed, and the reason is
+# in the scenarios below: S2 removes the *recurring* "one-time" charges and
+# keeps the genuinely non-recurring ones, so the two cannot be one category.
+
+Category = Literal[
+    "standard",
+    "accepted_non_cash",
+    "one_time",
+    "aggressive_recurring",
+    "aggressive_pro_forma",
+]
 CATEGORIES: tuple[str, ...] = get_args(Category)
+
+#: Categories a lender would call aggressive. Removing exactly these is what
+#: S2 does, and their share of covenant EBITDA is the headline figure.
+AGGRESSIVE_CATEGORIES = frozenset({"aggressive_recurring", "aggressive_pro_forma"})
+
+#: The category a ``one_time`` component is promoted to when the filings show
+#: the charge recurring. Only this promotion is data-driven; every other
+#: category is a property of the clause.
+RECURRING_CATEGORY = "aggressive_recurring"
+PROMOTABLE_CATEGORY = "one_time"
+
+#: Stock compensation is in ``accepted_non_cash`` because that is where the
+#: market puts it, not because it is obviously right: it is a real cost of
+#: paying people. Flagged rather than silently filed away.
+ARGUABLY_ACCEPTED_ITEMS = frozenset({"stock_based_compensation"})
 
 Sign = Literal["+", "-"]
 
-#: The categories each scenario keeps. S0 keeps every permitted component.
+#: The categories each scenario keeps. S0 keeps every component the agreement
+#: permits; each later scenario removes one class of argument.
 SCENARIO_CATEGORIES: dict[str, frozenset[str] | None] = {
     "S0": None,
-    "S1": frozenset({"standard", "non_cash", "one_time"}),
-    "S2": frozenset({"standard", "non_cash"}),
-    "S3": frozenset({"standard"}),
+    "S1": frozenset(
+        {"standard", "accepted_non_cash", "one_time", "aggressive_recurring"}
+    ),
+    "S2": frozenset({"standard", "accepted_non_cash", "one_time"}),
+    "S3": frozenset({"standard", "accepted_non_cash"}),
 }
 
 SCENARIO_LABELS = {
     "S0": "Contractual",
-    "S1": "No pro forma",
-    "S2": "No one-time",
-    "S3": "Standard adjustments only",
+    "S1": "Without pro forma",
+    "S2": "Without aggressive adjustments",
+    "S3": "Conservative EBITDA",
+}
+
+SCENARIO_QUESTIONS = {
+    "S0": "What does the agreement permit?",
+    "S1": "What if the projected savings never arrive?",
+    "S2": "What survives if every aggressive add-back is disallowed?",
+    "S3": "What does the business earn on standard and accepted non-cash terms?",
 }
 
 SCENARIO_IDS = ("S0", "S1", "S2", "S3")

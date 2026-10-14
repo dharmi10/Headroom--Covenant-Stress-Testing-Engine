@@ -25,7 +25,13 @@ from backend.evaluator.money import ZERO, dec_str, div, exact, quantize_percent
 from backend.evaluator.reasons import Reason
 from backend.evaluator.scenarios import EbitdaResult, evaluate_ebitda
 from backend.evaluator.schema import FormulaVersion
-from backend.evaluator.vocabulary import SCENARIO_IDS, SCENARIO_LABELS
+from backend.evaluator.vocabulary import (
+    AGGRESSIVE_CATEGORIES,
+    ARGUABLY_ACCEPTED_ITEMS,
+    SCENARIO_IDS,
+    SCENARIO_LABELS,
+    SCENARIO_QUESTIONS,
+)
 
 #: Bumped whenever the arithmetic changes, so a stored run says which rules
 #: produced it. Set from the git commit at build time where available.
@@ -65,11 +71,20 @@ class RunResult:
     tight_band: Decimal
     ebitda: dict[str, EbitdaResult]
     covenants: dict[str, dict[str, CovenantResult]]
-    adjustment_dependence: Decimal | None
+    #: ``(S0 - S2) / S0``: the share of covenant EBITDA that depends on
+    #: add-backs a lender would call aggressive.
+    aggressive_dependence: Decimal | None
+    #: The share contributed by accepted non-cash charges, reported separately
+    #: because it is a different argument: impairment and amortisation of
+    #: acquired intangibles are normally allowed, and lumping them in with
+    #: projected synergies would overstate the case.
+    accepted_non_cash_share: Decimal | None
     steps: list[StepAttribution]
     inputs: PeriodInputs
     mapping_versions: dict[str, int] = field(default_factory=dict)
     reasons: list[Reason] = field(default_factory=list)
+    #: One entry per item whose recurrence was tested, with the years behind it.
+    recurrence: list[dict[str, object]] = field(default_factory=list)
     output_hash: str = ""
 
     @property
@@ -98,16 +113,25 @@ class RunResult:
             # vintage of the filer's figures it is showing without digging.
             "reporting_basis": self.inputs.basis,
             "reporting_basis_note": self.inputs.basis_note,
-            "adjustment_dependence": None
-            if self.adjustment_dependence is None
-            else dec_str(self.adjustment_dependence),
-            "adjustment_dependence_display": None
-            if self.adjustment_dependence is None
-            else dec_str(quantize_percent(self.adjustment_dependence)),
+            "aggressive_dependence": None
+            if self.aggressive_dependence is None
+            else dec_str(self.aggressive_dependence),
+            "aggressive_dependence_display": None
+            if self.aggressive_dependence is None
+            else dec_str(quantize_percent(self.aggressive_dependence)),
+            "accepted_non_cash_share": None
+            if self.accepted_non_cash_share is None
+            else dec_str(self.accepted_non_cash_share),
+            "accepted_non_cash_share_display": None
+            if self.accepted_non_cash_share is None
+            else dec_str(quantize_percent(self.accepted_non_cash_share)),
+            "arguably_accepted_items": sorted(ARGUABLY_ACCEPTED_ITEMS),
+            "recurrence": self.recurrence,
             "scenarios": [
                 {
                     "id": scenario,
                     "label": SCENARIO_LABELS[scenario],
+                    "question": SCENARIO_QUESTIONS[scenario],
                     "ebitda": self.ebitda[scenario].as_dict(),
                     "covenants": [
                         self.covenants[scenario][cid].as_dict()
@@ -150,8 +174,17 @@ def evaluate_run(
     evaluator_version: str = EVALUATOR_VERSION,
     require_approved: bool = True,
     mapping_versions: dict[str, int] | None = None,
+    recurrence: dict[str, object] | None = None,
 ) -> RunResult:
-    """Run every scenario and every covenant for one test quarter."""
+    """Run every scenario and every covenant for one test quarter.
+
+    ``recurrence`` maps an item to a :class:`RecurrenceFinding`-shaped dict (as
+    produced by ``backend/edgar/recurrence.py``). An item whose finding says
+    ``recurs`` promotes its ``one_time`` component to ``aggressive_recurring``,
+    which is what S2 removes. The findings travel into the stored run and into
+    the output hash, so a run says on what evidence it called a charge
+    recurring.
+    """
     run_reasons: list[Reason] = []
     if require_approved and version.status != "approved":
         run_reasons.append(
@@ -165,8 +198,17 @@ def evaluate_run(
     ebitda: dict[str, EbitdaResult] = {}
     covenants: dict[str, dict[str, CovenantResult]] = {}
 
+    findings = dict(recurrence or {})
+    recurring = {
+        item: str(finding.get("evidence") or "")
+        for item, finding in findings.items()
+        if isinstance(finding, dict) and finding.get("recurs")
+    }
+
     for scenario in SCENARIO_IDS:
-        result = evaluate_ebitda(version.ebitda, inputs, scenario)
+        result = evaluate_ebitda(
+            version.ebitda, inputs, scenario, recurring=recurring
+        )
         if run_reasons:
             result.value = None
             result.reasons = list(run_reasons) + result.reasons
@@ -176,7 +218,8 @@ def evaluate_run(
             for covenant in version.covenants
         }
 
-    dependence = _adjustment_dependence(ebitda)
+    aggressive = _aggressive_dependence(ebitda)
+    accepted = _accepted_non_cash_share(ebitda)
     steps = _steps(ebitda)
 
     run = RunResult(
@@ -188,27 +231,64 @@ def evaluate_run(
         tight_band=tight_band,
         ebitda=ebitda,
         covenants=covenants,
-        adjustment_dependence=dependence,
+        aggressive_dependence=aggressive,
+        accepted_non_cash_share=accepted,
         steps=steps,
         inputs=inputs,
         mapping_versions=dict(sorted((mapping_versions or {}).items())),
         reasons=run_reasons,
+        recurrence=[findings[item] for item in sorted(findings)],  # type: ignore[misc]
     )
     run.output_hash = canonical_hash(run.canonical_payload())
     return run
 
 
-def _adjustment_dependence(ebitda: dict[str, EbitdaResult]) -> Decimal | None:
-    """``(S0 - S3) / S0``: the share of covenant EBITDA from discretionary
-    adjustments. ``None`` when either end is not computable or S0 is zero."""
+def _aggressive_dependence(ebitda: dict[str, EbitdaResult]) -> Decimal | None:
+    """``(S0 - S2) / S0``: the share of covenant EBITDA that rests on add-backs
+    a lender would call aggressive - projected savings, and "one-time" charges
+    the filings show recurring.
+
+    S2 rather than S3 is the comparison on purpose. The old metric measured
+    against standard EBITDA, which counted impairment and stock compensation as
+    aggressive; a lender does not. ``None`` when either end is not computable
+    or S0 is zero.
+    """
     contractual = ebitda.get("S0")
-    standard = ebitda.get("S3")
-    if contractual is None or standard is None:
+    without_aggressive = ebitda.get("S2")
+    if contractual is None or without_aggressive is None:
         return None
-    if contractual.value is None or standard.value is None or contractual.value == 0:
+    if (
+        contractual.value is None
+        or without_aggressive.value is None
+        or contractual.value == 0
+    ):
         return None
     with exact():
-        return div(contractual.value - standard.value, contractual.value)
+        return div(contractual.value - without_aggressive.value, contractual.value)
+
+
+def _accepted_non_cash_share(ebitda: dict[str, EbitdaResult]) -> Decimal | None:
+    """The share of S0 contributed by accepted non-cash charges.
+
+    Taken from the components themselves rather than from a difference between
+    two scenarios, because no pair of scenarios isolates this class: S2 still
+    holds the genuinely non-recurring one-time charges. Signed contributions
+    are summed, so a non-cash *gain* deducted under the definition reduces the
+    share, which is the honest direction.
+    """
+    contractual = ebitda.get("S0")
+    if contractual is None or contractual.value is None or contractual.value == 0:
+        return None
+    with exact():
+        total = sum(
+            (
+                line.contribution
+                for line in contractual.included()
+                if line.judged_as == "accepted_non_cash" and line.contribution is not None
+            ),
+            ZERO,
+        )
+        return div(total, contractual.value)
 
 
 def _steps(ebitda: dict[str, EbitdaResult]) -> list[StepAttribution]:

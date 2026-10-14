@@ -12,13 +12,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Mapping
 
 from backend.evaluator.caps import PoolResult, evaluate_pools
 from backend.evaluator.inputs import PeriodInputs
 from backend.evaluator.money import ZERO, dec_str, exact
 from backend.evaluator.reasons import Reason, dedupe
 from backend.evaluator.schema import Component, EbitdaFormula
-from backend.evaluator.vocabulary import SCENARIO_CATEGORIES, SCENARIO_LABELS
+from backend.evaluator.vocabulary import (
+    PROMOTABLE_CATEGORY,
+    RECURRING_CATEGORY,
+    SCENARIO_CATEGORIES,
+    SCENARIO_LABELS,
+)
 
 
 @dataclass(frozen=True)
@@ -35,6 +41,17 @@ class ComponentLine:
     contribution: Decimal | None
     state: str
     detail: str | None = None
+    #: The category the component was judged under. Equal to ``category``
+    #: except where the filings showed a "one-time" charge recurring, in which
+    #: case the contract says one thing and the history says another, and the
+    #: result has to show both.
+    effective_category: str | None = None
+    #: Why the category was promoted, quoting the years and the amounts.
+    recurrence_evidence: str | None = None
+
+    @property
+    def judged_as(self) -> str:
+        return self.effective_category or self.category
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -42,6 +59,8 @@ class ComponentLine:
             "item": self.item,
             "sign": self.sign,
             "category": self.category,
+            "effective_category": self.judged_as,
+            "recurrence_evidence": self.recurrence_evidence,
             "cap_pool": self.cap_pool,
             "clause": self.clause,
             "requested": None if self.requested is None else dec_str(self.requested),
@@ -94,12 +113,40 @@ def includes_category(scenario: str, category: str) -> bool:
     return True if allowed is None else category in allowed
 
 
+def effective_category(
+    component: Component,
+    recurring: Mapping[str, str] | None,
+) -> tuple[str, str | None]:
+    """The category a component is judged under, and the evidence for it.
+
+    A clause's category is a property of the contract and never changes. The
+    one exception is a charge the agreement calls one-time that the borrower's
+    own filings show recurring: the contract still permits the add-back, but a
+    lender would not call it non-recurring, so it is judged as
+    ``aggressive_recurring`` and the years behind that are carried alongside.
+    """
+    if component.category != PROMOTABLE_CATEGORY or not recurring:
+        return component.category, None
+    evidence = recurring.get(component.item)
+    if evidence is None:
+        return component.category, None
+    return RECURRING_CATEGORY, evidence
+
+
 def evaluate_ebitda(
     formula: EbitdaFormula,
     inputs: PeriodInputs,
     scenario: str,
+    *,
+    recurring: Mapping[str, str] | None = None,
 ) -> EbitdaResult:
-    """Recalculate covenant EBITDA under ``scenario`` from scratch."""
+    """Recalculate covenant EBITDA under ``scenario`` from scratch.
+
+    ``recurring`` maps an item to the evidence that its "one-time" charge
+    recurs, as produced by :mod:`backend.edgar.recurrence`. Components in the
+    promotable category are judged as ``aggressive_recurring`` when they appear
+    in it.
+    """
     label = SCENARIO_LABELS.get(scenario, scenario)
     result = EbitdaResult(
         scenario=scenario, label=label, value=None, e_base=None, base_value=None
@@ -129,7 +176,7 @@ def evaluate_ebitda(
     pooled: dict[str, list[tuple[Component, Decimal]]] = {}
 
     for component in formula.components:
-        line, amount = _resolve(component, inputs, scenario, result)
+        line, amount = _resolve(component, inputs, scenario, result, recurring)
         result.lines.append(line)
         if amount is None:
             continue
@@ -163,12 +210,14 @@ def _resolve(
     inputs: PeriodInputs,
     scenario: str,
     result: EbitdaResult,
+    recurring: Mapping[str, str] | None = None,
 ) -> tuple[ComponentLine, Decimal | None]:
     """Resolve one component for one scenario.
 
     Returns the trace line and the signed contribution, or ``None`` when the
     component does not enter this scenario or has no usable value.
     """
+    judged, evidence = effective_category(component, recurring)
     shared = dict(
         key=component.key,
         item=component.item,
@@ -176,6 +225,8 @@ def _resolve(
         category=component.category,
         cap_pool=component.cap_pool,
         clause=component.clause,
+        effective_category=judged,
+        recurrence_evidence=evidence,
     )
 
     if component.excluded:
@@ -188,7 +239,7 @@ def _resolve(
             # NOT_COMPUTABLE; it is disclosed on each scenario that would
             # otherwise have included the component.
             state = "excluded_unsupported"
-            if includes_category(scenario, component.category):
+            if includes_category(scenario, judged):
                 result.disclosures.append(
                     Reason(
                         "unsupported_adjustment",
@@ -223,14 +274,17 @@ def _resolve(
             None,
         )
 
-    if not includes_category(scenario, component.category):
+    if not includes_category(scenario, judged):
+        detail = "category " + judged + " is out of scope for " + scenario
+        if evidence:
+            detail += " (" + evidence + ")"
         return (
             ComponentLine(
                 **shared,
                 requested=None,
                 contribution=None,
                 state="excluded_by_scenario",
-                detail="category " + component.category + " is out of scope for " + scenario,
+                detail=detail,
             ),
             None,
         )
@@ -287,4 +341,6 @@ def _apply_pool_attribution(result: EbitdaResult) -> None:
                 contribution=allowed,
                 state=line.state,
                 detail=detail,
+                effective_category=line.effective_category,
+                recurrence_evidence=line.recurrence_evidence,
             )

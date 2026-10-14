@@ -186,13 +186,38 @@ export interface ComponentLine {
   component: string;
   item: string;
   sign: string;
+  /** What the contract calls the clause. */
   category: string;
+  /** What it is judged as, once the filings have been consulted. Equal to
+   * `category` except where a "one-time" charge was found to recur. */
+  effective_category: string;
+  recurrence_evidence: string | null;
   cap_pool: string | null;
   clause: string | null;
   requested: string | null;
   contribution: string | null;
   state: string;
   detail: string | null;
+}
+
+/** One item's recurrence test, with the years behind it. */
+export interface RecurrenceFinding {
+  item: string;
+  concept: string | null;
+  recurs: boolean;
+  min_years: number;
+  window_years: number;
+  years_examined: number;
+  years_reported: number;
+  evidence: string;
+  years: {
+    fiscal_year_end: string;
+    value: string;
+    reported: boolean;
+    accession: string | null;
+    form: string | null;
+  }[];
+  note: string;
 }
 
 export interface SideTrace {
@@ -227,6 +252,7 @@ export interface CovenantResult {
 export interface ScenarioResult {
   id: string;
   label: string;
+  question: string;
   ebitda: {
     scenario: string;
     label: string;
@@ -258,8 +284,12 @@ export interface RunResult {
   headline_verdict: Verdict;
   reporting_basis: string | null;
   reporting_basis_note: string | null;
-  adjustment_dependence: string | null;
-  adjustment_dependence_display: string | null;
+  aggressive_dependence: string | null;
+  aggressive_dependence_display: string | null;
+  accepted_non_cash_share: string | null;
+  accepted_non_cash_share_display: string | null;
+  arguably_accepted_items: string[];
+  recurrence: RecurrenceFinding[];
   scenarios: ScenarioResult[];
   steps: StepAttribution[];
   inputs: {

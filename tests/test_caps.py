@@ -49,7 +49,7 @@ def test_fixed_cap_that_does_not_bind_leaves_the_pool_alone():
 def test_percentage_cap_measured_before_the_pool():
     """15% of EBITDA calculated before the add-backs: 0.15 x 100 = 15."""
     formula = ebitda_formula(
-        [component("run_rate_cost_savings", "pro_forma", cap_pool="A")],
+        [component("run_rate_cost_savings", "aggressive_pro_forma", cap_pool="A")],
         {"A": {"kind": "percentage", "pct": "0.15", "basis": "before_pool"}},
     )
     result = evaluate_ebitda(formula, _data(run_rate_cost_savings="40"), "S0")
@@ -60,7 +60,7 @@ def test_percentage_cap_measured_before_the_pool():
 def test_percentage_cap_measured_after_the_pool():
     """x <= 0.15(E + x) with E = 100 gives x <= 17.647...; EBITDA = 117.647..."""
     formula = ebitda_formula(
-        [component("run_rate_cost_savings", "pro_forma", cap_pool="A")],
+        [component("run_rate_cost_savings", "aggressive_pro_forma", cap_pool="A")],
         {"A": {"kind": "percentage", "pct": "0.15", "basis": "after_pool"}},
     )
     result = evaluate_ebitda(formula, _data(run_rate_cost_savings="40"), "S0")
@@ -111,7 +111,7 @@ def test_shared_pool_reallocates_when_an_item_is_removed():
     formula = ebitda_formula(
         [
             component("restructuring_charges", "one_time", cap_pool="A"),
-            component("run_rate_cost_savings", "pro_forma", cap_pool="A"),
+            component("run_rate_cost_savings", "aggressive_pro_forma", cap_pool="A"),
         ],
         {"A": {"kind": "fixed", "fixed_amount": "20"}},
     )
@@ -130,8 +130,15 @@ def test_shared_pool_reallocates_when_an_item_is_removed():
     # Subtracting the removed item from S0 would have given 105, not 115.
     assert s0.value - Decimal("15") == Decimal("105")
 
+    # S2 removes the aggressive classes only, and this restructuring charge is
+    # plain one_time - nothing promoted it - so it survives into S2 unchanged.
     s2 = evaluate_ebitda(formula, data, "S2")
-    assert s2.value == Decimal("100")
+    assert s2.pools["A"].allowed == Decimal("15")
+    assert s2.value == Decimal("115")
+
+    # S3 keeps standard and accepted non-cash only, so the pool empties.
+    s3 = evaluate_ebitda(formula, data, "S3")
+    assert s3.value == Decimal("100")
 
 
 def test_capped_pool_is_attributed_pro_rata_and_sums_exactly():
@@ -177,7 +184,7 @@ def test_two_pools_before_pool_do_not_inflate_each_other():
     formula = ebitda_formula(
         [
             component("restructuring_charges", "one_time", cap_pool="A"),
-            component("run_rate_cost_savings", "pro_forma", cap_pool="B"),
+            component("run_rate_cost_savings", "aggressive_pro_forma", cap_pool="B"),
         ],
         {
             "A": {"kind": "percentage", "pct": "0.10", "basis": "before_pool"},
@@ -195,7 +202,7 @@ def test_an_after_pool_percentage_sees_the_other_pools_allowance():
     formula = ebitda_formula(
         [
             component("restructuring_charges", "one_time", cap_pool="A"),
-            component("run_rate_cost_savings", "pro_forma", cap_pool="B"),
+            component("run_rate_cost_savings", "aggressive_pro_forma", cap_pool="B"),
         ],
         {
             "A": {"kind": "fixed", "fixed_amount": "20"},
@@ -218,7 +225,7 @@ def test_two_after_pool_pools_are_rejected_as_unsupported():
         ebitda_formula(
             [
                 component("restructuring_charges", "one_time", cap_pool="A"),
-                component("run_rate_cost_savings", "pro_forma", cap_pool="B"),
+                component("run_rate_cost_savings", "aggressive_pro_forma", cap_pool="B"),
             ],
             {
                 "A": {"kind": "percentage", "pct": "0.10", "basis": "after_pool"},
@@ -274,7 +281,7 @@ def test_prd_example_formula_validates_as_written():
             {
                 "item": "run_rate_cost_savings",
                 "sign": "+",
-                "category": "pro_forma",
+                "category": "aggressive_pro_forma",
                 "cap_pool": "A",
                 "span": {"start": 48500, "end": 48530, "quote": "run rate cost savings"},
                 "review": {"decision": "accepted"},

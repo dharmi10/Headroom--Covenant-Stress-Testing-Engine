@@ -32,7 +32,7 @@ ADD_BACK_ITEMS = [
     "run_rate_cost_savings",
     "other_non_cash_charges",
 ]
-CATEGORIES = ["non_cash", "one_time", "pro_forma"]
+CATEGORIES = ["accepted_non_cash", "one_time", "aggressive_pro_forma"]
 
 
 @settings(max_examples=200, deadline=None)

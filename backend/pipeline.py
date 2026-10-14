@@ -24,11 +24,17 @@ from backend.edgar.mapping import (
     propose,
     required_items,
 )
+from backend.edgar.recurrence import (
+    DEFAULT_MIN_YEARS,
+    DEFAULT_WINDOW_YEARS,
+    examine_items,
+)
 from backend.edgar.ttm import available_test_dates, build_period_inputs
 from backend.evaluator.approval import Blocker, approval_blockers
 from backend.evaluator.covenant import DEFAULT_TIGHT_BAND
 from backend.evaluator.run import RunResult, evaluate_run
 from backend.evaluator.schema import FormulaVersion
+from backend.evaluator.vocabulary import PROMOTABLE_CATEGORY
 
 
 @dataclass
@@ -82,6 +88,50 @@ def test_dates_for(version: FormulaVersion, sources: DealSources) -> list[dt.dat
     return available_test_dates(sources.facts_by_concept)
 
 
+def promotable_items(version: FormulaVersion) -> list[str]:
+    """Items on a component the filings could promote to aggressive_recurring.
+
+    Only the promotable category is tested. Asking whether depreciation recurs
+    would be a waste of a question, and asking whether an excluded clause
+    recurs would report evidence about a charge that never enters a result.
+    """
+    found: list[str] = []
+    for component in version.ebitda.components:
+        if component.excluded or component.category != PROMOTABLE_CATEGORY:
+            continue
+        if component.item in ("unmapped", "unsupported"):
+            continue
+        if component.item not in found:
+            found.append(component.item)
+    return found
+
+
+def recurrence_findings(
+    version: FormulaVersion,
+    sources: DealSources,
+    records: dict[str, MappingRecord],
+    test_date: dt.date,
+    *,
+    basis: str | None = None,
+    min_years: int = DEFAULT_MIN_YEARS,
+    window_years: int = DEFAULT_WINDOW_YEARS,
+) -> dict[str, dict]:
+    """Test every promotable item for recurrence, on the run's own basis."""
+    items = {
+        item: (records[item].concept if item in records else None)
+        for item in promotable_items(version)
+    }
+    findings = examine_items(
+        items=items,
+        facts_by_concept=sources.facts_by_concept,
+        test_date=test_date,
+        min_years=min_years,
+        window_years=window_years,
+        basis=basis,  # type: ignore[arg-type]
+    )
+    return {item: finding.as_dict() for item, finding in findings.items()}
+
+
 def run_quarter(
     version: FormulaVersion,
     sources: DealSources,
@@ -91,8 +141,15 @@ def run_quarter(
     tight_band: Decimal = DEFAULT_TIGHT_BAND,
     evaluator_version: str | None = None,
     require_approved: bool = True,
+    min_years: int = DEFAULT_MIN_YEARS,
+    window_years: int = DEFAULT_WINDOW_YEARS,
 ) -> RunResult:
-    """Build the inputs for one quarter and evaluate every covenant."""
+    """Build the inputs for one quarter and evaluate every covenant.
+
+    Recurrence is tested after the basis is chosen and on that basis, so the
+    years behind a promotion are the same vintage of the filer's figures as the
+    TTM window it is applied to.
+    """
     items = required_items(version)
     inputs = build_period_inputs(
         deal_id=version.deal_id,
@@ -104,6 +161,15 @@ def run_quarter(
     mapping_versions = {
         item: records[item].mapping_version for item in items if item in records
     }
+    findings = recurrence_findings(
+        version,
+        sources,
+        records,
+        test_date,
+        basis=inputs.basis,
+        min_years=min_years,
+        window_years=window_years,
+    )
     kwargs = {}
     if evaluator_version is not None:
         kwargs["evaluator_version"] = evaluator_version
@@ -113,6 +179,7 @@ def run_quarter(
         tight_band=tight_band,
         require_approved=require_approved,
         mapping_versions=mapping_versions,
+        recurrence=findings,  # type: ignore[arg-type]
         **kwargs,
     )
 
@@ -184,6 +251,11 @@ def write_inputs_snapshot(path: str | Path, run: RunResult) -> None:
         "quarters": run.inputs.quarters,
         "basis": run.inputs.basis,
         "basis_note": run.inputs.basis_note,
+        # Recurrence is derived from the filings exactly as the TTM window is,
+        # so it belongs in the snapshot: replaying the snapshot has to
+        # reproduce the promotion as well as the amounts, or the replayed
+        # scenarios are not the scenarios that were run.
+        "recurrence": {row["item"]: row for row in run.recurrence},
         "items": {
             item: resolved.model_dump(mode="json")
             for item, resolved in sorted(run.inputs.items.items())
