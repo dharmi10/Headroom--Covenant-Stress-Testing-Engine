@@ -320,7 +320,7 @@ Clicking any figure opens its working, down to the filing it came from.
 | Fail-closed | 100% | Each removed fact produces its correct reason code; no scenario falls back to zero |
 | Mapping coverage | Reported | 12 of 12 required items verified, of which 9 from reported concepts and 3 from sourced analyst values |
 | Reporting basis | Single basis per run | Every fact in the golden window carries one basis, no derived quarter is negative, and the snapshot rebuilds from the committed companyfacts |
-| Compiler semantic accuracy | Reported | `make measure` runs a real compile against the golden agreement and scores it clause by clause; it needs credentials, so it is not part of the test suite |
+| Compiler semantic accuracy | Reported, **not yet measured** | `make measure RUNS=5` compiles each golden agreement five times and scores every clause on item, sign, category and cap rule, with run-to-run stability. It needs Anthropic credentials, so it is not part of the test suite, and no figure is claimed until it has run — see [`docs/evaluation/compiler.md`](docs/evaluation/compiler.md) |
 
 The suite is **200 tests** covering the arithmetic, the cap engine, XBRL
 handling, the reporting basis, the compiler, the API and the golden deal end to

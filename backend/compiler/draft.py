@@ -490,18 +490,33 @@ def _draft_covenants(
     return covenants
 
 
+CREDENTIAL_ENV_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
+
+
 def anthropic_client() -> Any:
-    """The Anthropic client, or a clear error about credentials."""
+    """The Anthropic client, or a clear error about credentials.
+
+    The SDK constructs happily with no credential and only raises when the
+    first request is built, which surfaced a stack trace from the middle of a
+    compile instead of an answerable message. The credential is therefore
+    checked here, before any agreement is sent anywhere.
+    """
     try:
         import anthropic
     except ImportError as exc:  # pragma: no cover - dependency is declared
         raise CompileError("the anthropic package is not installed") from exc
     try:
-        return anthropic.Anthropic()
+        client = anthropic.Anthropic()
     except Exception as exc:  # noqa: BLE001 - the SDK raises its own types
         raise CompileError(
             "no Anthropic credentials found: set ANTHROPIC_API_KEY or run 'ant auth login'"
         ) from exc
+    resolved = getattr(client, "api_key", None) or getattr(client, "auth_token", None)
+    if not resolved and not any(os.environ.get(name) for name in CREDENTIAL_ENV_VARS):
+        raise CompileError(
+            "no Anthropic credentials found: set ANTHROPIC_API_KEY or run 'ant auth login'"
+        )
+    return client
 
 
 def save_transcript(path: str | Path, result: CompileResult) -> None:

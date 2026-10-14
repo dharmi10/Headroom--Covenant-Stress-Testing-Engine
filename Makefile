@@ -9,7 +9,7 @@ ifeq (,$(wildcard .venv/Scripts/python.exe))
 PY := .venv/bin/python
 endif
 
-.PHONY: help venv install test demo demo-live api ui golden inputs fixture hand-calc verify measure clean
+.PHONY: help venv install test demo demo-live api ui golden inputs fixture hand-calc verify measure measure-replay clean
 
 help:
 	@echo "make install    create the virtualenv and install everything"
@@ -22,7 +22,8 @@ help:
 	@echo "make inputs     rebuild ttm_inputs.json from the committed companyfacts"
 	@echo "make hand-calc  recompute expected.json independently of the evaluator"
 	@echo "make verify     recheck the golden case with no backend imports"
-	@echo "make measure    measure the compiler against the golden formula (needs credentials)"
+	@echo "make measure    measure the compiler against the golden formulas (needs credentials)"
+	@echo "                RUNS=5 compiles each agreement five times and reports stability"
 
 venv:
 	uv venv --python 3.11 .venv || python -m venv .venv
@@ -61,8 +62,13 @@ fixture:
 hand-calc:
 	$(PY) -m scripts.hand_calc
 
+RUNS ?= 1
+
 measure:
-	$(PY) -m scripts.measure_compiler
+	$(PY) -m scripts.measure_compiler --runs $(RUNS)
+
+measure-replay:
+	$(PY) -m scripts.measure_compiler --replay --runs $(RUNS)
 
 clean:
 	rm -f headroom.db
