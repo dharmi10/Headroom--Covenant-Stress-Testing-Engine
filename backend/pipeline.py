@@ -19,12 +19,13 @@ from backend.edgar.client import EdgarClient
 from backend.edgar.facts import Fact, parse_company_facts
 from backend.edgar.mapping import (
     MappingRecord,
+    duplicate_concept_blockers,
     mapping_coverage,
     propose,
     required_items,
 )
 from backend.edgar.ttm import available_test_dates, build_period_inputs
-from backend.evaluator.approval import approval_blockers
+from backend.evaluator.approval import Blocker, approval_blockers
 from backend.evaluator.covenant import DEFAULT_TIGHT_BAND
 from backend.evaluator.run import RunResult, evaluate_run
 from backend.evaluator.schema import FormulaVersion
@@ -121,8 +122,26 @@ def coverage(version: FormulaVersion, records: dict[str, MappingRecord]) -> tupl
     return mapping_coverage(records, required_items(version))
 
 
-def blockers(version: FormulaVersion) -> list[dict[str, str]]:
-    return [blocker.as_dict() for blocker in approval_blockers(version)]
+def all_blockers(
+    version: FormulaVersion, records: dict[str, MappingRecord] | None = None
+) -> list[Blocker]:
+    """Everything standing between ``version`` and an approved formula.
+
+    Both gates report into one list, because a reviewer wants one answer to
+    "can this be approved yet". The formula gate checks the components; the
+    mapping gate adds the conflicts only the records can show, such as two
+    items pointing at one reported concept.
+    """
+    found = approval_blockers(version)
+    if records:
+        found = found + duplicate_concept_blockers(records, required_items(version))
+    return found
+
+
+def blockers(
+    version: FormulaVersion, records: dict[str, MappingRecord] | None = None
+) -> list[dict[str, str]]:
+    return [blocker.as_dict() for blocker in all_blockers(version, records)]
 
 
 # -- golden set loading ------------------------------------------------------
@@ -152,11 +171,19 @@ def load_golden(folder: str | Path) -> tuple[dict, FormulaVersion, dict[str, Map
 
 
 def write_inputs_snapshot(path: str | Path, run: RunResult) -> None:
-    """Record the resolved inputs of a run, with provenance, for the golden set."""
+    """Record the resolved inputs of a run, with provenance, for the golden set.
+
+    The reporting basis is part of the snapshot's identity, not a note about
+    it: the same four quarter ends resolve to different figures on the two
+    bases, so a snapshot that did not name its basis could not be replayed
+    and checked against the filings it came from.
+    """
     payload = {
         "deal_id": run.deal_id,
         "test_date": run.test_date.isoformat(),
         "quarters": run.inputs.quarters,
+        "basis": run.inputs.basis,
+        "basis_note": run.inputs.basis_note,
         "items": {
             item: resolved.model_dump(mode="json")
             for item, resolved in sorted(run.inputs.items.items())

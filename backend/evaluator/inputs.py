@@ -40,6 +40,10 @@ class FactRef(BaseModel):
     fp: str | None = None
     origin: Origin = "reported"
     transformation: str | None = None
+    #: Which vintage of the filer's figures this fact was taken on. Set on
+    #: every fact a run resolved, so the audit trail can say whether a number
+    #: is the restated one or the one first published.
+    basis: str | None = None
 
     @property
     def label(self) -> str:
@@ -81,6 +85,11 @@ class PeriodInputs(BaseModel):
     fiscal_year: int | None = None
     fiscal_period: str | None = None
     quarters: list[str] = Field(default_factory=list)
+    #: The single reporting basis every item in this window was built on. Part
+    #: of the run's identity: two runs that chose differently are not the same
+    #: measurement, so this travels into the canonical output hash.
+    basis: str | None = None
+    basis_note: str | None = None
     items: dict[str, ItemInput] = Field(default_factory=dict)
 
     def get(self, item: str) -> ItemInput:

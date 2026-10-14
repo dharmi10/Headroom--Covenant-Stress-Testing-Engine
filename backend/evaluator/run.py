@@ -94,6 +94,10 @@ class RunResult:
             "evaluator_version": self.evaluator_version,
             "tight_band": dec_str(self.tight_band),
             "headline_verdict": self.headline_verdict,
+            # Lifted out of the inputs so the deal screen can say which
+            # vintage of the filer's figures it is showing without digging.
+            "reporting_basis": self.inputs.basis,
+            "reporting_basis_note": self.inputs.basis_note,
             "adjustment_dependence": None
             if self.adjustment_dependence is None
             else dec_str(self.adjustment_dependence),

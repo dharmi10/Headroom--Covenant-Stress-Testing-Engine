@@ -7,6 +7,8 @@
     "2025-01-01..2025-03-30",
     "2025-03-31..2025-06-29"
   ],
+  "basis": "as_originally_reported",
+  "basis_note": "Built from the figures as originally reported. The figures as restated resolve only 7 of 12 items, because a restatement falls inside the window and the filer did not reissue every period it affected.",
   "items": {
     "cash_and_equivalents": {
       "item": "cash_and_equivalents",
@@ -30,7 +32,8 @@
           "fy": 2025,
           "fp": "Q2",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         }
       ],
       "note": null
@@ -57,14 +60,15 @@
           "fy": 2025,
           "fp": "Q2",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         }
       ],
       "note": null
     },
     "depreciation_amortization": {
       "item": "depreciation_amortization",
-      "value": "102869000",
+      "value": "273471000",
       "reason": null,
       "origin": "derived",
       "concept": "DepreciationAndAmortization",
@@ -84,55 +88,59 @@
           "fy": 2025,
           "fp": "Q3",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "DepreciationAndAmortization",
-          "value": "-41275000",
+          "value": "71792000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2024-09-30",
           "end": "2024-12-31",
           "instant": null,
           "form": "10-K",
-          "accession": "0000096943-26-000019",
-          "filed": "2026-02-27",
-          "fy": 2025,
+          "accession": "0000096943-25-000031",
+          "filed": "2025-02-28",
+          "fy": 2024,
           "fp": "FY",
           "origin": "derived",
-          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date)"
+          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date, same reporting basis)",
+          "basis": "as_originally_reported"
         },
         {
           "concept": "DepreciationAndAmortization",
-          "value": "38620000",
+          "value": "67331000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-01-01",
           "end": "2025-03-30",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000050",
-          "filed": "2026-05-07",
-          "fy": 2026,
+          "accession": "0000096943-25-000077",
+          "filed": "2025-05-01",
+          "fy": 2025,
           "fp": "Q1",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "DepreciationAndAmortization",
-          "value": "36888000",
+          "value": "65712000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-03-31",
           "end": "2025-06-29",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000095",
-          "filed": "2026-08-06",
-          "fy": 2026,
+          "accession": "0000096943-25-000115",
+          "filed": "2025-07-31",
+          "fy": 2025,
           "fp": "Q2",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         }
       ],
       "note": "TTM of 2024-07-01..2024-09-29, 2024-09-30..2024-12-31, 2025-01-01..2025-03-30, 2025-03-31..2025-06-29"
@@ -159,14 +167,15 @@
           "fy": null,
           "fp": null,
           "origin": "analyst",
-          "transformation": "Clause (b)(v) adds any non-cash charge; for this period that is goodwill and intangible impairment. No single concept carries it and neither sparse concept has a fact in all four quarters, because Teleflex tags them only in quarters with a non-zero amount, so no TTM window can be built mechanically. Hand-summed from the filings: goodwill impairment 240,000 thousand in Q4 FY2024 (GoodwillImpairmentLoss, accession 0000096943-25-000031) and intangible impairment 5,724 thousand in Q4 FY2024 and 8,117 thousand in Q2 FY2025 (ImpairmentOfIntangibleAssetsExcludingGoodwill, accessions 0000096943-26-000019 and 0000096943-26-000095), with nil reported in Q3 FY2024 and Q1 FY2025. Total 253,841 thousand."
+          "transformation": "Clause (b)(v) adds any non-cash charge; for this period that is goodwill and intangible impairment. No single concept carries it and neither sparse concept has a fact in all four quarters, because Teleflex tags them only in quarters with a non-zero amount, so no TTM window can be built mechanically. Hand-summed from the filings: goodwill impairment 240,000 thousand in Q4 FY2024 (GoodwillImpairmentLoss, accession 0000096943-25-000031) and intangible impairment 5,724 thousand in Q4 FY2024 and 8,117 thousand in Q2 FY2025 (ImpairmentOfIntangibleAssetsExcludingGoodwill, accessions 0000096943-26-000019 and 0000096943-26-000095), with nil reported in Q3 FY2024 and Q1 FY2025. Total 253,841 thousand.",
+          "basis": null
         }
       ],
       "note": "Clause (b)(v) adds any non-cash charge; for this period that is goodwill and intangible impairment. No single concept carries it and neither sparse concept has a fact in all four quarters, because Teleflex tags them only in quarters with a non-zero amount, so no TTM window can be built mechanically. Hand-summed from the filings: goodwill impairment 240,000 thousand in Q4 FY2024 (GoodwillImpairmentLoss, accession 0000096943-25-000031) and intangible impairment 5,724 thousand in Q4 FY2024 and 8,117 thousand in Q2 FY2025 (ImpairmentOfIntangibleAssetsExcludingGoodwill, accessions 0000096943-26-000019 and 0000096943-26-000095), with nil reported in Q3 FY2024 and Q1 FY2025. Total 253,841 thousand."
     },
     "income_tax_expense": {
       "item": "income_tax_expense",
-      "value": "2224000",
+      "value": "56036000",
       "reason": null,
       "origin": "derived",
       "concept": "IncomeTaxExpenseBenefit",
@@ -186,62 +195,66 @@
           "fy": 2025,
           "fp": "Q3",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "IncomeTaxExpenseBenefit",
-          "value": "-26315000",
+          "value": "9902000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2024-09-30",
           "end": "2024-12-31",
           "instant": null,
           "form": "10-K",
-          "accession": "0000096943-26-000019",
-          "filed": "2026-02-27",
-          "fy": 2025,
+          "accession": "0000096943-25-000031",
+          "filed": "2025-02-28",
+          "fy": 2024,
           "fp": "FY",
           "origin": "derived",
-          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date)"
+          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date, same reporting basis)",
+          "basis": "as_originally_reported"
         },
         {
           "concept": "IncomeTaxExpenseBenefit",
-          "value": "6417000",
+          "value": "13839000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-01-01",
           "end": "2025-03-30",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000050",
-          "filed": "2026-05-07",
-          "fy": 2026,
+          "accession": "0000096943-25-000077",
+          "filed": "2025-05-01",
+          "fy": 2025,
           "fp": "Q1",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "IncomeTaxExpenseBenefit",
-          "value": "2489000",
+          "value": "12662000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-03-31",
           "end": "2025-06-29",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000095",
-          "filed": "2026-08-06",
-          "fy": 2026,
+          "accession": "0000096943-25-000115",
+          "filed": "2025-07-31",
+          "fy": 2025,
           "fp": "Q2",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         }
       ],
       "note": "TTM of 2024-07-01..2024-09-29, 2024-09-30..2024-12-31, 2025-01-01..2025-03-30, 2025-03-31..2025-06-29"
     },
     "interest_expense": {
       "item": "interest_expense",
-      "value": "79902000",
+      "value": "79945000",
       "reason": null,
       "origin": "derived",
       "concept": "InterestExpenseNonoperating",
@@ -261,55 +274,59 @@
           "fy": 2025,
           "fp": "Q3",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "InterestExpenseNonoperating",
-          "value": "18604000",
+          "value": "18635000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2024-09-30",
           "end": "2024-12-31",
           "instant": null,
           "form": "10-K",
-          "accession": "0000096943-26-000019",
-          "filed": "2026-02-27",
-          "fy": 2025,
+          "accession": "0000096943-25-000031",
+          "filed": "2025-02-28",
+          "fy": 2024,
           "fp": "FY",
           "origin": "derived",
-          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date)"
+          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date, same reporting basis)",
+          "basis": "as_originally_reported"
         },
         {
           "concept": "InterestExpenseNonoperating",
-          "value": "18537000",
+          "value": "18544000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-01-01",
           "end": "2025-03-30",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000050",
-          "filed": "2026-05-07",
-          "fy": 2026,
+          "accession": "0000096943-25-000077",
+          "filed": "2025-05-01",
+          "fy": 2025,
           "fp": "Q1",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "InterestExpenseNonoperating",
-          "value": "21703000",
+          "value": "21708000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-03-31",
           "end": "2025-06-29",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000095",
-          "filed": "2026-08-06",
-          "fy": 2026,
+          "accession": "0000096943-25-000115",
+          "filed": "2025-07-31",
+          "fy": 2025,
           "fp": "Q2",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         }
       ],
       "note": "TTM of 2024-07-01..2024-09-29, 2024-09-30..2024-12-31, 2025-01-01..2025-03-30, 2025-03-31..2025-06-29"
@@ -336,7 +353,8 @@
           "fy": 2025,
           "fp": "Q2",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         }
       ],
       "note": null
@@ -363,7 +381,8 @@
           "fy": 2025,
           "fp": "FY",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "NetIncomeLoss",
@@ -379,7 +398,8 @@
           "fy": 2025,
           "fp": "FY",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "NetIncomeLoss",
@@ -395,7 +415,8 @@
           "fy": 2026,
           "fp": "Q2",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "NetIncomeLoss",
@@ -406,12 +427,13 @@
           "end": "2025-06-29",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000095",
-          "filed": "2026-08-06",
-          "fy": 2026,
-          "fp": "Q2",
+          "accession": "0000096943-25-000138",
+          "filed": "2025-11-06",
+          "fy": 2025,
+          "fp": "Q3",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         }
       ],
       "note": "TTM of 2024-07-01..2024-09-29, 2024-09-30..2024-12-31, 2025-01-01..2025-03-30, 2025-03-31..2025-06-29"
@@ -438,14 +460,15 @@
           "fy": null,
           "fp": null,
           "origin": "analyst",
-          "transformation": "Clause (c)(ii) deducts non-cash income or gains. OtherNoncashIncomeExpense is a net concept Teleflex last reported in 2012, and no gain of this kind is separately quantified in the four reports covering this window. Recorded as nil. Unlike the add-backs, a nil deduction overstates covenant EBITDA, so this is the one analyst value here that is not conservative, and it is flagged as a limitation rather than treated as a measurement."
+          "transformation": "Clause (c)(ii) deducts non-cash income or gains. OtherNoncashIncomeExpense is a net concept Teleflex last reported in 2012, and no gain of this kind is separately quantified in the four reports covering this window. Recorded as nil. Unlike the add-backs, a nil deduction overstates covenant EBITDA, so this is the one analyst value here that is not conservative, and it is flagged as a limitation rather than treated as a measurement.",
+          "basis": null
         }
       ],
       "note": "Clause (c)(ii) deducts non-cash income or gains. OtherNoncashIncomeExpense is a net concept Teleflex last reported in 2012, and no gain of this kind is separately quantified in the four reports covering this window. Recorded as nil. Unlike the add-backs, a nil deduction overstates covenant EBITDA, so this is the one analyst value here that is not conservative, and it is flagged as a limitation rather than treated as a measurement."
     },
     "restructuring_charges": {
       "item": "restructuring_charges",
-      "value": "3900000",
+      "value": "8446000",
       "reason": null,
       "origin": "derived",
       "concept": "RestructuringCharges",
@@ -465,62 +488,66 @@
           "fy": 2025,
           "fp": "Q3",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "RestructuringCharges",
-          "value": "940000",
+          "value": "5468000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2024-09-30",
           "end": "2024-12-31",
           "instant": null,
           "form": "10-K",
-          "accession": "0000096943-26-000019",
-          "filed": "2026-02-27",
-          "fy": 2025,
+          "accession": "0000096943-25-000031",
+          "filed": "2025-02-28",
+          "fy": 2024,
           "fp": "FY",
           "origin": "derived",
-          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date)"
+          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date, same reporting basis)",
+          "basis": "as_originally_reported"
         },
         {
           "concept": "RestructuringCharges",
-          "value": "1422000",
+          "value": "1528000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-01-01",
           "end": "2025-03-30",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000050",
-          "filed": "2026-05-07",
-          "fy": 2026,
+          "accession": "0000096943-25-000077",
+          "filed": "2025-05-01",
+          "fy": 2025,
           "fp": "Q1",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "RestructuringCharges",
-          "value": "1253000",
+          "value": "1165000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-03-31",
           "end": "2025-06-29",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000095",
-          "filed": "2026-08-06",
-          "fy": 2026,
+          "accession": "0000096943-25-000115",
+          "filed": "2025-07-31",
+          "fy": 2025,
           "fp": "Q2",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         }
       ],
       "note": "TTM of 2024-07-01..2024-09-29, 2024-09-30..2024-12-31, 2025-01-01..2025-03-30, 2025-03-31..2025-06-29"
     },
     "stock_based_compensation": {
       "item": "stock_based_compensation",
-      "value": "22508000",
+      "value": "30376000",
       "reason": null,
       "origin": "derived",
       "concept": "ShareBasedCompensation",
@@ -540,55 +567,59 @@
           "fy": 2025,
           "fp": "Q3",
           "origin": "derived",
-          "transformation": "9M to 2024-09-29 minus 6M to 2024-06-30 (shared fiscal year and start date)"
+          "transformation": "9M to 2024-09-29 minus 6M to 2024-06-30 (shared fiscal year and start date, same reporting basis)",
+          "basis": "as_originally_reported"
         },
         {
           "concept": "ShareBasedCompensation",
-          "value": "2233000",
+          "value": "7621000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2024-09-30",
           "end": "2024-12-31",
           "instant": null,
           "form": "10-K",
-          "accession": "0000096943-26-000019",
-          "filed": "2026-02-27",
-          "fy": 2025,
+          "accession": "0000096943-25-000031",
+          "filed": "2025-02-28",
+          "fy": 2024,
           "fp": "FY",
           "origin": "derived",
-          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date)"
+          "transformation": "12M to 2024-12-31 minus 9M to 2024-09-29 (shared fiscal year and start date, same reporting basis)",
+          "basis": "as_originally_reported"
         },
         {
           "concept": "ShareBasedCompensation",
-          "value": "6630000",
+          "value": "7826000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-01-01",
           "end": "2025-03-30",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000050",
-          "filed": "2026-05-07",
-          "fy": 2026,
+          "accession": "0000096943-25-000077",
+          "filed": "2025-05-01",
+          "fy": 2025,
           "fp": "Q1",
           "origin": "reported",
-          "transformation": null
+          "transformation": null,
+          "basis": "as_originally_reported"
         },
         {
           "concept": "ShareBasedCompensation",
-          "value": "5657000",
+          "value": "6941000",
           "unit": "USD",
           "period_type": "duration",
           "start": "2025-03-31",
           "end": "2025-06-29",
           "instant": null,
           "form": "10-Q",
-          "accession": "0000096943-26-000095",
-          "filed": "2026-08-06",
-          "fy": 2026,
+          "accession": "0000096943-25-000115",
+          "filed": "2025-07-31",
+          "fy": 2025,
           "fp": "Q2",
           "origin": "derived",
-          "transformation": "6M to 2025-06-29 minus 3M to 2025-03-30 (shared fiscal year and start date)"
+          "transformation": "6M to 2025-06-29 minus 3M to 2025-03-30 (shared fiscal year and start date, same reporting basis)",
+          "basis": "as_originally_reported"
         }
       ],
       "note": "TTM of 2024-07-01..2024-09-29, 2024-09-30..2024-12-31, 2025-01-01..2025-03-30, 2025-03-31..2025-06-29"
@@ -615,7 +646,8 @@
           "fy": null,
           "fp": null,
           "origin": "analyst",
-          "transformation": "Clause (b)(iv) adds charges incurred in connection with acquisitions, investments, dispositions and refinancings. Teleflex tags no acquisition-related cost concept at all and its four reports covering this window separately quantify none, so nothing can be sourced. Recorded as nil, which understates covenant EBITDA if such charges exist and therefore never flatters the covenant."
+          "transformation": "Clause (b)(iv) adds charges incurred in connection with acquisitions, investments, dispositions and refinancings. Teleflex tags no acquisition-related cost concept at all and its four reports covering this window separately quantify none, so nothing can be sourced. Recorded as nil, which understates covenant EBITDA if such charges exist and therefore never flatters the covenant.",
+          "basis": null
         }
       ],
       "note": "Clause (b)(iv) adds charges incurred in connection with acquisitions, investments, dispositions and refinancings. Teleflex tags no acquisition-related cost concept at all and its four reports covering this window separately quantify none, so nothing can be sourced. Recorded as nil, which understates covenant EBITDA if such charges exist and therefore never flatters the covenant."

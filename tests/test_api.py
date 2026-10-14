@@ -7,6 +7,7 @@ these tests touch no network and still exercise the real service rules.
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -342,12 +343,25 @@ def test_the_full_flow_reproduces_the_golden_result(client, golden_formula):
     assert result["headline_verdict"] == "PASS"
     assert result["adjustment_dependence"] == expected["adjustment_dependence"]
 
-    leverage = next(
+    # S3 strips every discretionary add-back, so leverage has to rise and the
+    # cushion has to fall. Both are asserted as relations rather than as fixed
+    # figures: the direction is the finding, the levels depend on the quarter
+    # and on which reporting basis it could be built from.
+    s0_leverage = next(
+        covenant
+        for covenant in by_id["S0"]["covenants"]
+        if covenant["covenant_id"] == "max_total_net_leverage"
+    )
+    s3_leverage = next(
         covenant
         for covenant in by_id["S3"]["covenants"]
         if covenant["covenant_id"] == "max_total_net_leverage"
     )
-    assert leverage["verdict"] == "TIGHT"
+    want = expected["scenarios"]["S3"]["covenants"]["max_total_net_leverage"]
+    assert s3_leverage["verdict"] == want["verdict"]
+    assert s3_leverage["ratio"] == want["ratio"]
+    assert Decimal(s3_leverage["ratio"]) > Decimal(s0_leverage["ratio"])
+    assert Decimal(s3_leverage["cushion"]) < Decimal(s0_leverage["cushion"])
 
 
 def test_a_run_is_stored_with_its_versions_and_can_be_read_back(client, golden_formula):

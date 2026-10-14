@@ -23,8 +23,11 @@ from backend.compiler.spans import verify_version
 from backend.evaluator.approval import approval_blockers
 from backend.evaluator.inputs import PeriodInputs
 from backend.evaluator.run import evaluate_run
-from backend.pipeline import coverage, load_golden
+from backend.edgar.facts import parse_company_facts
 from backend.edgar.mapping import required_items
+from backend.evaluator.vocabulary import NON_NEGATIVE_FLOW_ITEMS
+from backend.pipeline import DealSources, coverage, load_golden, run_quarter
+from scripts.seed_golden import FixtureEdgar
 
 GOLDEN = Path("data/golden/teleflex-2025q2")
 
@@ -39,6 +42,8 @@ def golden():
             "deal_id": snapshot["deal_id"],
             "test_date": snapshot["test_date"],
             "quarters": snapshot["quarters"],
+            "basis": snapshot["basis"],
+            "basis_note": snapshot["basis_note"],
             "items": snapshot["items"],
         }
     )
@@ -126,7 +131,7 @@ def test_the_restructuring_cap_is_measured_before_its_own_pool(run, golden):
     assert pool.e == Decimal(expected["scenarios"]["S0"]["e_outside_pools"])
     assert pool.cap == Decimal(expected["scenarios"]["S0"]["pool_cap"])
     assert pool.allowed == Decimal(expected["scenarios"]["S0"]["pool_allowed"])
-    assert pool.binding is False  # 3.9m of restructuring against a 32.7m cap
+    assert pool.binding is False  # 8.4m of restructuring against a 44.3m cap
 
 
 def test_the_excluded_pension_pool_contributes_nothing(run):
@@ -140,16 +145,29 @@ def test_adjustment_dependence_matches_the_hand_calculation(run, golden):
     assert run.adjustment_dependence == Decimal(expected["adjustment_dependence"])
 
 
-def test_the_headline_is_pass_but_plain_ebitda_is_tight(run):
-    """The finding the deal exists to show: comfortable on the agreement's own
-    terms, two percent from a breach on plain EBITDA."""
+def test_plain_ebitda_is_materially_tighter_than_the_contractual_figure(run, golden):
+    """The finding the deal exists to show: the same quarter is a third less
+    comfortable once the discretionary add-backs are stripped out.
+
+    The relation is what is asserted. The levels are not: they depend on which
+    reporting basis the window could be built from, and on this deal they
+    moved once the window stopped mixing two bases, so pinning a cushion of
+    "two percent" here would be pinning a bug. The absolute figures are
+    checked against the hand calculation in the tests above.
+    """
+    _, _, _, expected, _ = golden
     assert run.headline_verdict == "PASS"
     contractual = run.covenants["S0"]["max_total_net_leverage"]
     standard = run.covenants["S3"]["max_total_net_leverage"]
     assert contractual.verdict == "PASS"
-    assert standard.verdict == "TIGHT"
-    assert contractual.cushion > Decimal("0.44")
-    assert standard.cushion < Decimal("0.03")
+    assert standard.verdict == expected["scenarios"]["S3"]["covenants"][
+        "max_total_net_leverage"
+    ]["verdict"]
+    assert standard.ratio is not None and contractual.ratio is not None
+    assert standard.ratio > contractual.ratio
+    assert standard.cushion < contractual.cushion
+    assert run.adjustment_dependence is not None
+    assert run.adjustment_dependence > Decimal("0.30")
 
 
 def test_exclusions_are_disclosed_on_every_scenario_that_would_include_them(run):
@@ -181,3 +199,62 @@ def test_the_test_date_is_a_real_quarter_end(golden):
     deal, _, _, _, inputs = golden
     assert inputs.test_date == dt.date.fromisoformat(deal["test_date"])
     assert len(inputs.quarters) == 4
+
+
+# -- the reporting basis -----------------------------------------------------
+#
+# The regression these three guard is the one that changed the golden figures.
+# Taking the most recently filed value for each period independently mixed two
+# presentations of Teleflex's 2024 inside one window, and the fourth quarter
+# came out as the restated year minus the originally reported nine months:
+# -41,275,000 of depreciation, which summed into a TTM total that looked
+# entirely ordinary. The synthetic shape is pinned in tests/test_basis.py;
+# these run against the committed filing data.
+
+
+def test_the_golden_window_is_built_on_one_reporting_basis(golden):
+    """Every fact in the run carries the same basis, named on the inputs."""
+    _, _, _, _, inputs = golden
+    assert inputs.basis == "as_originally_reported"
+    assert inputs.basis_note
+    for item, resolved in inputs.items.items():
+        for ref in resolved.facts:
+            if resolved.origin == "analyst":
+                continue
+            assert ref.basis == inputs.basis, (item, ref.label)
+
+
+def test_no_derived_quarter_in_the_golden_window_is_negative(golden):
+    """Depreciation does not run backwards and a lender does not pay the
+    borrower interest. A negative derived quarter here is the signature of two
+    cumulative figures that were never on the same basis."""
+    _, _, _, _, inputs = golden
+    for item in NON_NEGATIVE_FLOW_ITEMS:
+        resolved = inputs.items.get(item)
+        if resolved is None:
+            continue
+        for ref in resolved.facts:
+            assert ref.value >= 0, (item, ref.label, ref.transformation)
+        assert resolved.value is not None and resolved.value > 0, item
+
+
+def test_the_golden_snapshot_rebuilds_from_the_committed_companyfacts(golden):
+    """The snapshot is a record of what the pipeline resolves, not a figure
+    kept by hand: rebuilding it from the committed fixture has to reproduce
+    every item, the basis it was built on, and nothing else."""
+    deal, version, records, _, inputs = golden
+    payload = FixtureEdgar().company_facts(deal["cik"])
+    sources = DealSources(
+        cik=deal["cik"],
+        facts_by_concept=parse_company_facts(payload),
+        entity_name=payload.get("entityName"),
+    )
+    rebuilt = run_quarter(
+        version, sources, records, dt.date.fromisoformat(deal["test_date"])
+    )
+    assert rebuilt.inputs.basis == inputs.basis
+    assert rebuilt.inputs.quarters == inputs.quarters
+    assert set(rebuilt.inputs.items) == set(inputs.items)
+    for item, resolved in sorted(rebuilt.inputs.items.items()):
+        assert resolved.value == inputs.items[item].value, item
+        assert resolved.origin == inputs.items[item].origin, item

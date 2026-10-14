@@ -7,15 +7,25 @@ the facts itself, derives the fiscal fourth quarter explicitly as FY minus the
 nine-month year to date, and prints every intermediate number so each one can
 be checked against the filing it came from.
 
-It differs from the application in one rule, deliberately: a quarter may only
-be derived from two year-to-date facts **reported in the same filing**. Two
-figures for overlapping periods taken from different filings are not two views
-of the same running total if the company restated in between, and subtracting
-them produces a number that was never reported by anybody.
+A quarter may only be derived from two year-to-date facts on the same
+reporting basis. Two figures for overlapping periods are not two views of the
+same running total if the company restated in between, and subtracting them
+produces a number that was never reported by anybody. The basis is worked out
+here from the filings themselves, independently of the application: a
+year-to-date series is cut at the first filing that reported one of its periods
+with a different value, and a window is built from one side of that cut only.
+
+The whole calculation then runs on a single basis, chosen the same way the
+application chooses it - the restated figures if they can produce a complete
+window, the figures as originally reported if they cannot - so that the two
+implementations are comparable on the figures they actually used.
 
 Run with::
 
     python scripts/verify_teleflex.py
+
+``--basis as_restated`` or ``--basis as_originally_reported`` forces one basis
+instead, which is how the rejected mixed-basis window can be inspected.
 """
 
 from __future__ import annotations
@@ -83,6 +93,9 @@ THIN = "-" * 92
 
 findings: list[str] = []
 
+#: Set from ``--basis`` to force one basis; ``None`` means work it out.
+CHOSEN_BASIS: str | None = None
+
 
 def note(line: str) -> None:
     findings.append(line)
@@ -140,6 +153,59 @@ def candidates(rows: list[dict], start: dt.date | None, end: dt.date) -> list[di
 
 def value_of(row: dict) -> Decimal:
     return Decimal(str(row["val"]))
+
+
+# ---------------------------------------------------------- reporting basis --
+
+BASES = ("as_restated", "as_originally_reported")
+BASIS_LABELS = {
+    "as_restated": "as restated",
+    "as_originally_reported": "as originally reported",
+}
+
+
+def boundaries_of(series: list[dict]) -> list[str]:
+    """Filing dates at which a value inside one year-to-date series changed.
+
+    A series is the set of rows sharing a start date, which is exactly the set
+    a quarter may be derived within. The first filing to report one of its
+    periods with a value different from that period's first published value is
+    where the series splits into two bases.
+    """
+    by_period: dict[tuple, list[dict]] = {}
+    for row in series:
+        by_period.setdefault((row.get("start"), row.get("end")), []).append(row)
+    cuts: set[str] = set()
+    for group in by_period.values():
+        ordered = sorted(group, key=lambda r: (r.get("filed") or "", r.get("accn") or ""))
+        first = value_of(ordered[0])
+        for later in ordered[1:]:
+            if value_of(later) != first and later.get("filed"):
+                cuts.add(str(later["filed"]))
+    return sorted(cuts)
+
+
+def rows_on_basis(rows: list[dict], basis: str) -> list[dict]:
+    """Keep only the rows belonging to ``basis``, series by series.
+
+    A series nobody restated survives whole: its one presentation is both the
+    original and the current figure. A restated series is cut, and only one
+    side is kept, so nothing downstream can subtract across the cut.
+    """
+    by_start: dict[object, list[dict]] = {}
+    for row in rows:
+        by_start.setdefault(row.get("start"), []).append(row)
+    kept: list[dict] = []
+    for series in by_start.values():
+        cuts = boundaries_of(series)
+        if not cuts:
+            kept.extend(series)
+            continue
+        if basis == "as_restated":
+            kept.extend(r for r in series if str(r.get("filed") or "") >= cuts[-1])
+        else:
+            kept.extend(r for r in series if str(r.get("filed") or "") < cuts[0])
+    return kept
 
 
 # ------------------------------------------------------- the four quarters --
@@ -209,20 +275,20 @@ class Resolved:
 
 
 def resolve_quarter(
-    rows: list[dict], start: dt.date, end: dt.date, *, prefer: str
+    rows: list[dict], start: dt.date, end: dt.date, *, basis: str
 ) -> Resolved | None:
     """One quarter, reported if stated, else derived from two cumulative facts.
 
-    ``prefer`` is "latest" or "original" and chooses between filings that
-    reported the same period with different values - that is, between the
-    figures as first published and a later restatement. A fiscal fourth
-    quarter can never be derived from a single filing (the full year is in the
-    10-K, the nine months are in the Q3 10-Q), so the derivation necessarily
-    spans two filings and the caller is told which.
+    ``rows`` is filtered to ``basis`` first, so every figure in play sits on
+    one side of any restatement. A fiscal fourth quarter can never be derived
+    from a single filing - the full year is in the 10-K, the nine months are in
+    the Q3 10-Q - so the derivation necessarily spans two filings, and the
+    basis filter is what makes those two filings comparable.
     """
+    rows = rows_on_basis(rows, basis)
     stated = candidates(rows, start, end)
     if stated:
-        row = stated[-1] if prefer == "latest" else stated[0]
+        row = stated[-1]
         return Resolved(
             start,
             end,
@@ -250,8 +316,8 @@ def resolve_quarter(
         short_candidates = candidates(rows, long_start, start - dt.timedelta(days=1))
         if not long_candidates or not short_candidates:
             continue
-        longer = long_candidates[-1] if prefer == "latest" else long_candidates[0]
-        shorter = short_candidates[-1] if prefer == "latest" else short_candidates[0]
+        longer = long_candidates[-1]
+        shorter = short_candidates[-1]
         value = value_of(longer) - value_of(shorter)
         detail = (
             _months(longer)
@@ -311,17 +377,43 @@ def resolve_item(
     window: list[tuple[dt.date, dt.date]],
     item: str,
     *,
-    prefer: str,
+    basis: str,
 ) -> tuple[Decimal | None, list[Resolved]]:
     parts: list[Resolved] = []
     total = Decimal(0)
     for start, end in window:
-        resolved = resolve_quarter(rows, start, end, prefer=prefer)
+        resolved = resolve_quarter(rows, start, end, basis=basis)
         if resolved is None:
             return None, parts
         parts.append(resolved)
         total += resolved.value
     return total, parts
+
+
+def choose_basis(facts: dict, window: list[tuple[dt.date, dt.date]]) -> str:
+    """The basis the whole calculation runs on.
+
+    The restated figures are preferred, because they are the filer's current
+    statement of the period. They are only usable if they can produce a
+    complete window for everything the other basis could; when a restatement
+    lands inside the window and the filer never reissued the comparative, they
+    cannot, and the figures as originally reported are used instead.
+    """
+    resolvable: dict[str, set[str]] = {}
+    for basis in BASES:
+        found = set()
+        for item, concept in DURATION_CONCEPTS.items():
+            total, _parts = resolve_item(rows_for(facts, concept), window, item, basis=basis)
+            if total is not None:
+                found.add(item)
+        resolvable[basis] = found
+    union: set[str] = set()
+    for found in resolvable.values():
+        union |= found
+    for basis in BASES:
+        if resolvable[basis] == union:
+            return basis
+    return max(BASES, key=lambda b: (len(resolvable[b]), b == "as_restated"))
 
 
 # ---------------------------------------------------------------- the maths --
@@ -337,14 +429,46 @@ def main() -> int:
     print("    entity:", facts.get("entityName"), "| CIK", facts.get("cik"))
     window = find_quarter_windows(facts)
 
+    chosen = CHOSEN_BASIS or choose_basis(facts, window)
     print()
     print(RULE)
-    print("TTM flows, quarter by quarter")
+    print("Reporting basis")
+    print(RULE)
+    print("A restatement inside the window splits each year-to-date series in")
+    print("two. A window is built from one side only, never across the cut.")
+    print()
+    for name in BASES:
+        resolvable = [
+            item
+            for item, concept in DURATION_CONCEPTS.items()
+            if resolve_item(rows_for(facts, concept), window, item, basis=name)[0] is not None
+        ]
+        mark = " <-- used" if name == chosen else ""
+        print(
+            "   ",
+            BASIS_LABELS[name].ljust(24),
+            "resolves",
+            str(len(resolvable)) + "/" + str(len(DURATION_CONCEPTS)),
+            "items",
+            mark,
+        )
+        missing = [item for item in DURATION_CONCEPTS if item not in resolvable]
+        if missing:
+            print("        cannot build:", ", ".join(missing))
+    if chosen != "as_restated":
+        note(
+            "the window is built from the figures as originally reported: the "
+            "restated figures cannot produce a complete window, because the "
+            "filer restated the year without reissuing every comparative"
+        )
+
+    print()
+    print(RULE)
+    print("TTM flows, quarter by quarter -", BASIS_LABELS[chosen])
     print(RULE)
 
     ttm: dict[str, Decimal] = {}
     all_parts: dict[str, list[Resolved]] = {}
-    mixed_basis: list[str] = []
 
     for item, concept in DURATION_CONCEPTS.items():
         rows = rows_for(facts, concept)
@@ -353,12 +477,11 @@ def main() -> int:
         print()
         print(THIN)
         print(item, "<-", concept)
-        total, parts = resolve_item(rows, window, item, prefer="latest")
+        total, parts = resolve_item(rows, window, item, basis=chosen)
         if total is None:
-            print("    NOT RESOLVABLE on a single-filing basis")
-            note(item + ": could not be resolved from one consistent filing basis")
+            print("    NOT RESOLVABLE on", BASIS_LABELS[chosen])
+            note(item + ": could not be resolved on " + BASIS_LABELS[chosen])
             continue
-        bases = set()
         for part in parts:
             warning = restatement_warning(rows, part.start, part.end)
             print(
@@ -376,53 +499,56 @@ def main() -> int:
                 print("        derived:", part.detail)
             if warning:
                 print("        " + warning)
-            bases.add(part.basis[:4])
+            if part.origin == "derived" and part.value < 0 and item in (
+                "depreciation_amortization",
+                "interest_expense",
+            ):
+                print("        !! IMPLAUSIBLE: this item cannot be negative")
+                note(
+                    item
+                    + ": derived quarter "
+                    + part.start.isoformat()
+                    + ".."
+                    + part.end.isoformat()
+                    + " is negative, which it cannot be"
+                )
         print("    TTM".ljust(34), f"{total:>16,}")
-        if len(bases) > 1:
-            print(
-                "    !! the four quarters come from filings in different years:",
-                ", ".join(sorted(bases)),
-            )
-            mixed_basis.append(item)
         ttm[item] = total
         all_parts[item] = parts
 
-    if mixed_basis:
-        note(
-            "TTM windows drawn from filings of different years (a restatement "
-            "falls inside the window): " + ", ".join(mixed_basis)
-        )
-
-    # -- the same window on the figures as originally published -------------
+    # -- the same window on the basis that was NOT used ---------------------
+    other = "as_originally_reported" if chosen == "as_restated" else "as_restated"
     print()
     print(RULE)
-    print("The same window, on the figures as ORIGINALLY published")
+    print("The same window on the basis that was NOT used:", BASIS_LABELS[other])
     print(RULE)
-    print("Teleflex restated 2024 and 2025 when it separated its business. Taking")
-    print("the latest figure for each period independently mixes the restated")
-    print("continuing-operations basis with the original total-company basis.")
-    print("Below is the same window built from each period's FIRST published")
-    print("figure, so every quarter is on one basis.")
+    print("Teleflex restated 2024 and 2025 when it separated its business, so the")
+    print("two bases are materially different. Neither is wrong; mixing them is.")
     original: dict[str, Decimal] = {}
     print()
-    print("    item".ljust(34), "latest-filed basis".rjust(20), "original basis".rjust(20), "   difference")
+    print(
+        "    item".ljust(34),
+        BASIS_LABELS[chosen].rjust(22),
+        BASIS_LABELS[other].rjust(22),
+        "   difference",
+    )
     for item, concept in DURATION_CONCEPTS.items():
         rows = rows_for(facts, concept)
-        total, parts = resolve_item(rows, window, item, prefer="original")
+        total, parts = resolve_item(rows, window, item, basis=other)
         if total is None:
-            print("   ", item.ljust(30), "not resolvable on the original basis")
+            print("   ", item.ljust(30), "not resolvable on " + BASIS_LABELS[other])
             continue
         original[item] = total
-        latest_total = ttm.get(item)
-        if latest_total is None:
+        used_total = ttm.get(item)
+        if used_total is None:
             continue
-        delta = total - latest_total
+        delta = total - used_total
         flag = "" if delta == 0 else "  <-- differs"
         print(
             "   ",
             item.ljust(30),
-            f"{latest_total:>18,}",
-            f"{total:>20,}",
+            f"{used_total:>20,}",
+            f"{total:>22,}",
             f"{delta:>18,}",
             flag,
         )
@@ -431,9 +557,9 @@ def main() -> int:
         if len(o_required) == 4:
             s3_original = sum((original[i] for i in o_required), Decimal(0))
             print()
-            print("    S3 on the latest-filed basis (what the app uses):".ljust(56))
+            print("    S3 on " + BASIS_LABELS[chosen] + " (the basis used):")
             print("       ", f"{sum((ttm[i] for i in o_required), Decimal(0)):>18,}")
-            print("    S3 on the original basis:")
+            print("    S3 on " + BASIS_LABELS[other] + ":")
             print("       ", f"{s3_original:>18,}")
             note(
                 "S3 differs by "
@@ -483,7 +609,7 @@ def main() -> int:
             print("        not reported by this filer")
             continue
         for start, end in window:
-            resolved = resolve_quarter(rows, start, end, prefer="latest")
+            resolved = resolve_quarter(rows, start, end, basis=chosen)
             if resolved is None:
                 print(
                     "       ",
@@ -740,5 +866,16 @@ def main() -> int:
     return 1 if differences else 0
 
 
+def _basis_from_argv() -> str | None:
+    """``--basis <name>``, for inspecting the basis the run did not choose."""
+    if "--basis" not in sys.argv:
+        return None
+    wanted = sys.argv[sys.argv.index("--basis") + 1]
+    if wanted not in BASES:
+        raise SystemExit("--basis must be one of " + ", ".join(BASES))
+    return wanted
+
+
 if __name__ == "__main__":
+    CHOSEN_BASIS = _basis_from_argv()
     sys.exit(main())

@@ -32,6 +32,7 @@ BLOCKER_TEXT = {
     "unreviewed_covenant": "a covenant has no reviewer decision",
     "duplicate_item": "two components resolve to the same item and would double count",
     "all_components_rejected": "every component was rejected, leaving nothing to compute",
+    "duplicate_concept": "two formula items are mapped to the same reported concept",
 }
 
 

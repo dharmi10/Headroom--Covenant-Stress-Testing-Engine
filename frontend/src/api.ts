@@ -156,6 +156,7 @@ export interface FactRef {
   filed: string | null;
   origin: string;
   transformation: string | null;
+  basis: string | null;
 }
 
 export interface ItemInput {
@@ -255,6 +256,8 @@ export interface RunResult {
   evaluator_version: string;
   tight_band: string;
   headline_verdict: Verdict;
+  reporting_basis: string | null;
+  reporting_basis_note: string | null;
   adjustment_dependence: string | null;
   adjustment_dependence_display: string | null;
   scenarios: ScenarioResult[];
@@ -263,6 +266,8 @@ export interface RunResult {
     deal_id: string;
     test_date: string;
     quarters: string[];
+    basis: string | null;
+    basis_note: string | null;
     items: Record<string, ItemInput>;
   };
   mapping_versions: Record<string, number>;

@@ -26,6 +26,7 @@ from backend.edgar.client import EdgarClient, EdgarError
 from backend.evaluator.covenant import DEFAULT_TIGHT_BAND
 from backend.evaluator.schema import FormulaVersion, Review
 from backend.evaluator.vocabulary import SCENARIO_IDS, SCENARIO_LABELS
+from backend.pipeline import all_blockers
 
 DATABASE_URL = os.environ.get("HEADROOM_DATABASE_URL", DEFAULT_URL)
 
@@ -343,14 +344,14 @@ def read_version(
     except Exception as exc:  # noqa: BLE001
         raise _handle(exc) from exc
     parsed = FormulaVersion.model_validate(row.payload)
-    from backend.evaluator.approval import approval_blockers
+    records = service.mapping_records(session, deal_id)
 
     return {
         "version": row.version,
         "status": row.status,
         "formula": row.payload,
         "compile_log": row.compile_log,
-        "blockers": [blocker.as_dict() for blocker in approval_blockers(parsed)],
+        "blockers": [blocker.as_dict() for blocker in all_blockers(parsed, records)],
     }
 
 
@@ -368,12 +369,12 @@ def review_version(
         parsed = FormulaVersion.model_validate(row.payload)
         updated = _apply_reviews(parsed, payload)
         service.replace_draft(session, deal, updated)
-        from backend.evaluator.approval import approval_blockers
+        records = service.mapping_records(session, deal_id)
 
         return {
             "version": version,
             "formula": updated.model_dump(mode="json", by_alias=True),
-            "blockers": [blocker.as_dict() for blocker in approval_blockers(updated)],
+            "blockers": [blocker.as_dict() for blocker in all_blockers(updated, records)],
         }
     except Exception as exc:  # noqa: BLE001
         raise _handle(exc) from exc

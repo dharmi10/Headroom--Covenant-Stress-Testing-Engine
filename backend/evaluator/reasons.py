@@ -19,6 +19,8 @@ ReasonCode = Literal[
     "incompatible_facts",
     "missing_analyst_input",
     "unsupported_adjustment",
+    "inconsistent_basis",
+    "implausible_value",
 ]
 
 REASON_TEXT: dict[str, str] = {
@@ -29,6 +31,8 @@ REASON_TEXT: dict[str, str] = {
     "incompatible_facts": "Facts exist but cannot be combined",
     "missing_analyst_input": "An item marked unavailable needs an analyst value and has none",
     "unsupported_adjustment": "The scenario includes a component the reviewer excluded as unsupported",
+    "inconsistent_basis": "The four quarters cannot be built without mixing restated and originally reported figures",
+    "implausible_value": "A derived quarter produced a value the item cannot take",
 }
 
 ALL_REASONS: tuple[str, ...] = tuple(REASON_TEXT)

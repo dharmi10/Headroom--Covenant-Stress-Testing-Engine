@@ -77,6 +77,21 @@ INSTANT_ITEMS = frozenset(DEBT_ITEMS)
 #: Items with no XBRL concept at all: only an analyst can supply a value.
 ANALYST_ONLY_ITEMS = frozenset({"run_rate_cost_savings"})
 
+#: Items that cannot be negative over a trailing twelve month period. A
+#: derived quarter is a subtraction of two cumulative figures, so it is where a
+#: basis error shows up as an arithmetic impossibility: depreciation cannot run
+#: backwards and a borrower cannot be paid to hold debt. A negative here is
+#: reported as ``implausible_value`` rather than summed into a TTM total.
+#:
+#: Tax expense is deliberately absent: a tax benefit is a real negative, and so
+#: is a net loss.
+NON_NEGATIVE_FLOW_ITEMS = frozenset(
+    {
+        "depreciation_amortization",
+        "interest_expense",
+    }
+)
+
 Category = Literal["standard", "non_cash", "one_time", "pro_forma"]
 CATEGORIES: tuple[str, ...] = get_args(Category)
 

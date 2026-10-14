@@ -6,7 +6,7 @@
  */
 
 import type { FormulaVersion, MappingRecord, RunResult, StoredRun } from "../api";
-import { asOf, exact, itemLabel, percent, reasonLabel, shortHash } from "../format";
+import { asOf, basisLabel, exact, itemLabel, percent, reasonLabel, shortHash } from "../format";
 import { FactTable } from "../components/FactTable";
 
 export function AuditTrail({
@@ -59,6 +59,15 @@ export function AuditTrail({
             <div>
               <dt>Agreement</dt>
               <dd className="hash">{run.source_hash}</dd>
+            </div>
+            <div>
+              <dt>Reporting basis</dt>
+              <dd>
+                Figures {basisLabel(run.reporting_basis)}
+                {run.reporting_basis_note ? (
+                  <div className="muted">{run.reporting_basis_note}</div>
+                ) : null}
+              </dd>
             </div>
             <div>
               <dt>Evaluator</dt>

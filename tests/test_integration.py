@@ -163,6 +163,8 @@ def test_a_later_quarter_fails_closed_rather_than_guessing(seeded):
         "incompatible_facts",
         "missing_analyst_input",
         "ambiguous_mapping",
+        "inconsistent_basis",
+        "implausible_value",
     }
     notes = [
         reason["detail"]
@@ -172,23 +174,27 @@ def test_a_later_quarter_fails_closed_rather_than_guessing(seeded):
     ]
     assert any("cannot be reused for 2025-12-31" in (note or "") for note in notes)
 
-    # The three scenarios that need the analyst-valued clauses fail closed;
-    # S3 keeps only the standard adjustments, all of which are reported, so it
-    # still computes - and it computes to a loss, which is a real answer
-    # rather than a missing one.
+    # Every scenario declines, each naming the item that stopped it. The three
+    # that need the analyst-valued clauses report missing_analyst_input; S3
+    # needs only the standard adjustments, but depreciation at this date can
+    # only be derived as the restated year minus the originally reported nine
+    # months, which comes to a negative quarter, so it is refused as
+    # implausible_value rather than summed into a plausible-looking total.
     by_id = {scenario["id"]: scenario for scenario in payload["scenarios"]}
-    for name in ("S0", "S1", "S2"):
+    for name in ("S0", "S1", "S2", "S3"):
         assert by_id[name]["ebitda"]["ebitda"] is None, name
         assert by_id[name]["ebitda"]["reasons"], name
-    assert by_id["S3"]["ebitda"]["reasons"] == []
-    assert float(by_id["S3"]["ebitda"]["ebitda"]) < 0
+    s3_codes = {reason["code"] for reason in by_id["S3"]["ebitda"]["reasons"]}
+    assert s3_codes == {"implausible_value"}
+    s3_items = {reason["item"] for reason in by_id["S3"]["ebitda"]["reasons"]}
+    assert s3_items == {"depreciation_amortization"}
     leverage = next(
         covenant
         for covenant in by_id["S3"]["covenants"]
         if covenant["covenant_type"] == "max_ratio"
     )
-    assert leverage["verdict"] == "BREACH"
-    assert leverage["ratio"] is None  # no finite ratio against non-positive EBITDA
+    assert leverage["verdict"] == "NOT_COMPUTABLE"
+    assert leverage["ratio"] is None
 
 
 @pytest.mark.skipif(

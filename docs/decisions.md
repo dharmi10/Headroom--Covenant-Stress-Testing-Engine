@@ -124,6 +124,111 @@ and strips only trailing fractional zeros, which is exact and context-free.
 `tests/test_scenarios.py` runs the same evaluation at three precisions in three
 threads and asserts one hash.
 
+## Reporting basis
+
+### One reporting basis per window, and the restatement that forced it
+
+The PRD says a quarter may be derived from two cumulative periods when they
+share concept, unit, fiscal year and start date. That is necessary and not
+sufficient. A filer that restates rarely republishes every period the
+restatement affected, so two facts can satisfy all four conditions and still be
+two different measurements.
+
+Teleflex restated 2024 and 2025 when it separated its business. The 2026 10-K
+reissued the 2024 full year — depreciation from 274,601,000 to 161,534,000 —
+and never reissued the nine months to 29 September 2024. Taking the most
+recently filed value for each period independently, which is what the build did
+before this change, therefore derived the fourth quarter of 2024 as the
+restated year minus the originally reported nine months:
+
+    161,534,000 − 202,809,000 = −41,275,000
+
+A quarter cannot have negative depreciation. Nothing downstream could catch it,
+because the TTM total it summed into — 102,869,000 — looked like an ordinary
+number. It reached `expected.json`, the README's headline table and the
+verification worksheet, and it was the reason the golden deal appeared to sit
+2.8% from a breach on plain EBITDA.
+
+Three rules now hold, all of which refuse rather than approximate:
+
+* **A window is built from one vintage.** A year-to-date series is cut at the
+  first filing that reported one of its periods with a different value, and
+  only one side of the cut survives. A series nobody restated is kept whole,
+  because its single presentation is both the original and the current figure.
+  Several restatements leave several boundaries; the restated cohort is cut at
+  the latest and the original cohort at the earliest, so a cohort sits inside
+  one presentation rather than straddling two.
+* **The run commits to one basis for every item.** `choose_basis` prefers the
+  restated figures, because they are the filer's current statement, and falls
+  back to the figures as originally reported when the restated ones cannot
+  produce everything the other basis could. An item only the rejected basis
+  could have built is reported as `inconsistent_basis`, never mixed in. The
+  basis is recorded on the inputs and travels into the canonical output hash,
+  because two runs that chose differently are not the same measurement.
+* **An arithmetic impossibility is refused.** A derived quarter is a
+  subtraction, which is where a basis error surfaces as something the item
+  cannot be. A negative derived quarter for depreciation or interest is
+  reported as `implausible_value` rather than summed. Tax is deliberately
+  excluded: a tax benefit is a real negative. A negative quarter the filer
+  actually *reported* is also kept — that is the filer's statement, and
+  Headroom does not overrule it.
+
+For the golden deal the restated basis is unusable for two separate reasons,
+and the worksheet records both: the fourth quarter of 2024 has no shorter
+cumulative period to subtract, and the first quarter of 2025 falls outside the
+restated cohort because that series was restated twice. The run uses the
+figures as originally reported and says so.
+
+What it cost: S0 covenant EBITDA moved from 657,174,000 to 894,045,000, S3 from
+376,925,000 to 601,382,000, adjustment dependence from 42.6% to 32.7%, and the
+S3 leverage verdict from TIGHT to PASS. The old figures were wrong. The finding
+the deal exists to show survives — a third of covenant EBITDA is discretionary,
+and stripping it moves leverage from 1.84x to 2.74x — but the dramatic version
+of it, a borrower two percent from a breach, was an artefact of an impossible
+quarter and is gone.
+
+The same change turned the 31 December 2025 run from a confident BREACH into
+four scenarios that decline. S3 there needs only the standard adjustments, but
+depreciation at that date can only be derived as the restated year minus the
+originally reported nine months, giving −33,230,000; it is refused. A run that
+declines is the correct answer and the previous one was not.
+
+### Open: whether Consolidated EBITDA should include discontinued operations
+
+**This is not resolved, and the figures above depend on it.**
+
+Teleflex's restatement was a reclassification for discontinued operations. The
+two bases are therefore not merely two vintages of the same measurement: the
+figures as originally reported describe the whole company as it was, and the
+restated figures describe continuing operations only. For the trailing twelve
+months to 29 June 2025 the difference in depreciation alone is of the order of
+100m.
+
+Which one the covenant means is a question about the credit agreement, not
+about the data. The agreement defines Consolidated EBITDA from Consolidated Net
+Income with enumerated add-backs, and clauses (b)(ix) and (c)(iii) address net
+losses and gains "from disposed, abandoned or discontinued operations or
+assets" — which shows the drafters contemplated discontinued operations, but
+does not settle how the base figure is measured once a disposal is classified
+as discontinued. Resolving it needs the full definitions of Consolidated Net
+Income and the GAAP clause read together, and in practice the borrower's own
+compliance certificate, which is not public.
+
+Headroom does not resolve it. What it does instead:
+
+* it builds every item in a run on one basis, so whichever answer is right, the
+  window is internally consistent;
+* it names the basis on the deal screen, in the audit trail and in the output
+  hash, so a reader can see which set of figures they are looking at;
+* it refuses to mix them, which is the one answer that is wrong under either
+  interpretation.
+
+A reader who concludes the covenant is measured on continuing operations should
+treat this run's figures as the wrong basis, not as a wrong calculation. The
+restated basis cannot currently produce a complete window for this quarter at
+all, so the honest position is that the question is open and the available
+answer is the one the filings can support.
+
 ## Data
 
 ### A contractual item can span several reported concepts
@@ -178,6 +283,9 @@ and then the reason codes say which item and which scenarios it affected.
 | Clause (b)(iv), (b)(vi), (b)(viii)–(ix), (b)(xi), (b)(xiii) and (c)(i), (c)(iii)–(iv) have no vocabulary item | Excluded with notes; the net effect understates covenant EBITDA on the add-back side and overstates it on the deduction side |
 | The cross-period claw-back proviso needs state across periods | Recorded as `unsupported` and excluded; overstates covenant EBITDA if such payments occurred |
 | Section location is regex-based | An unusual layout fails loudly, and the fallback is an analyst pasting the clause, never a second model call |
+| Whether the covenant is measured on continuing operations is unresolved | The run is built on the figures as originally reported and names that basis; on the other reading the figures are the wrong basis rather than a wrong calculation |
+| The restated basis cannot build this quarter's window at all | The choice is forced rather than argued: the filer reissued the 2024 year without reissuing the nine months, and restated the 2025 series twice |
+| The impairment analyst value mixes two vintages | The Q4 2024 intangible figure is derived across the restatement boundary; the one-basis rule polices selected facts, not a figure a human hand-summed |
 
 ## An analyst value is bound to the period it was sourced for
 
@@ -195,7 +303,12 @@ that already applied to a missing fact: reusing a stale number is the same
 silent assumption as substituting zero.
 
 The later-quarter case is worth looking at in the UI. At 2025-12-31, S0, S1 and
-S2 all report `missing_analyst_input`, while S3 keeps only the standard
-adjustments — every one of them reported — and computes to a loss, so the
-leverage covenant is a BREACH with no finite ratio. Three scenarios decline to
-answer, and the one that can answer does.
+S2 all report `missing_analyst_input` naming both dates. S3 needs only the
+standard adjustments, but depreciation at that date can only be derived as the
+restated year minus the originally reported nine months, which comes to
+−33,230,000 for the quarter, so it is refused as `implausible_value`. All four
+scenarios decline, each naming the item that stopped it.
+
+An earlier version of this section said S3 still computed there, to a loss, and
+returned a BREACH. That answer was built on the impossible quarter; see "One
+reporting basis per window" above.

@@ -127,6 +127,10 @@ export function reasonLabel(code: string): string {
       return "Needs an analyst value";
     case "unsupported_adjustment":
       return "Clause excluded as unsupported";
+    case "inconsistent_basis":
+      return "Would mix restated and originally reported figures";
+    case "implausible_value":
+      return "A derived quarter produced an impossible value";
     default:
       return code;
   }
@@ -148,8 +152,24 @@ export function blockerLabel(code: string): string {
       return "Two components resolve to the same item";
     case "all_components_rejected":
       return "Every component was rejected";
+    case "duplicate_concept":
+      return "Two formula items mapped to the same reported concept";
     default:
       return code;
+  }
+}
+
+/* Which vintage of the filer's own figures a run was built from. A restated
+ * window and an originally reported one are different measurements, so the
+ * screens name the basis rather than leaving the reader to assume. */
+export function basisLabel(basis: string | null | undefined): string {
+  switch (basis) {
+    case "as_restated":
+      return "as restated";
+    case "as_originally_reported":
+      return "as originally reported";
+    default:
+      return "basis not recorded";
   }
 }
 

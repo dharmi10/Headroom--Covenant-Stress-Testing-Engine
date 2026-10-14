@@ -144,6 +144,23 @@ def _rewind_to_draft(version: FormulaVersion) -> FormulaVersion:
     return FormulaVersion.model_validate(payload)
 
 
+def _report(session, context, deal) -> None:  # noqa: ANN001 - Session, Context, Deal
+    """Re-run the golden quarter on an already-seeded database and print it.
+
+    Re-running rather than reading the last stored run is deliberate: a second
+    ``make demo`` after a change to the arithmetic or to fact selection should
+    show what the code does now, and the output hash says whether that is still
+    what the hand calculation expects.
+    """
+    deal_meta, _version, _mappings = load_golden(GOLDEN)
+    test_date = dt.date.fromisoformat(deal_meta["test_date"])
+    print("re-running the quarter ending", test_date)
+    stored = service.execute_run(session, context, deal, test_date)
+    _print_run(stored.payload)
+    _compare_with_expected(stored.payload)
+    print("\nstored run #" + str(stored.id) + "; start the API with 'make api'")
+
+
 def _print_run(payload: dict) -> None:
     print("\n  scenario                         EBITDA     leverage   cushion   verdict")
     for scenario in payload["scenarios"]:
@@ -164,6 +181,7 @@ def _print_run(payload: dict) -> None:
         )
     print("\n  adjustment dependence:", payload["adjustment_dependence_display"])
     print("  headline verdict:     ", payload["headline_verdict"])
+    print("  reporting basis:      ", payload["reporting_basis"])
     print("  output hash:          ", payload["output_hash"])
 
 

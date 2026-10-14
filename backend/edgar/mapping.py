@@ -16,6 +16,7 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from backend.evaluator.approval import BLOCKER_TEXT, Blocker
 from backend.evaluator.schema import STRICT, IsoDate, IsoDateTime
 from backend.evaluator.vocabulary import ANALYST_ONLY_ITEMS, ItemName, period_type_for
 
@@ -166,6 +167,51 @@ def required_items(version) -> list[str]:  # noqa: ANN001 - FormulaVersion, avoi
         if item not in ordered and item not in ("unmapped", "unsupported"):
             ordered.append(item)
     return ordered
+
+
+def duplicate_concept_blockers(
+    records: dict[str, MappingRecord], items: list[str]
+) -> list[Blocker]:
+    """Block approval when two required items point at the same concept.
+
+    ``mapping.yaml`` offers the same candidate to more than one item - a
+    non-cash charge and a non-cash gain are both plausibly
+    ``OtherNoncashIncomeExpense`` - and nothing in the formula gate catches it,
+    because the duplicate-item check compares items, not the concepts they were
+    mapped to. Two items on one concept means the same reported figure enters
+    covenant EBITDA twice, and if their signs differ it enters in both
+    directions, which is worse than either being absent.
+
+    The right resolution is a reviewer's: one of the two is a different
+    contractual item and needs its own concept, or needs an analyst value, or
+    belongs excluded. So this reports and refuses rather than guessing.
+    """
+    by_concept: dict[str, list[str]] = {}
+    for item in items:
+        record = records.get(item)
+        if record is None or record.concept is None:
+            continue
+        by_concept.setdefault(record.concept, []).append(item)
+
+    blockers: list[Blocker] = []
+    for concept in sorted(by_concept):
+        sharing = sorted(by_concept[concept])
+        if len(sharing) < 2:
+            continue
+        blockers.append(
+            Blocker(
+                "duplicate_concept",
+                concept,
+                BLOCKER_TEXT["duplicate_concept"]
+                + ": "
+                + ", ".join(sharing)
+                + " all map to "
+                + concept
+                + ", so the same reported figure would enter the calculation"
+                + " more than once",
+            )
+        )
+    return blockers
 
 
 def mapping_coverage(records: dict[str, MappingRecord], items: list[str]) -> tuple[int, int]:

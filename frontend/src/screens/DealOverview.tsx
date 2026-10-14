@@ -6,7 +6,7 @@
  */
 
 import type { CovenantResult, DealStatus, RunResult, ScenarioResult } from "../api";
-import { asOf, exact, percent, ratio } from "../format";
+import { asOf, basisLabel, exact, percent, ratio } from "../format";
 import { Ladder } from "../components/Ladder";
 import { Verdict } from "../components/Verdict";
 import { TraceValue } from "../components/Trace";
@@ -59,6 +59,18 @@ export function DealOverview({
             </div>
           ) : null}
           <div>
+            <dt>Reporting basis</dt>
+            <dd>
+              Figures {basisLabel(run.reporting_basis)}
+              {run.reporting_basis === "as_originally_reported" ? (
+                <>
+                  {" "}
+                  <span className="muted">restatement inside the window</span>
+                </>
+              ) : null}
+            </dd>
+          </div>
+          <div>
             <dt>Formula</dt>
             <dd>version {run.formula_version}</dd>
           </div>
@@ -68,7 +80,11 @@ export function DealOverview({
       <p className="disclaimer">
         These figures are an analyst's estimate built from public filings, not the borrower's
         official compliance numbers, and the scenarios show sensitivity to the adjustments the
-        agreement permits rather than any claim about true earnings.
+        agreement permits rather than any claim about true earnings. Every figure is taken on
+        one reporting basis &mdash; {basisLabel(run.reporting_basis)} &mdash; because a window
+        that mixed a restatement with the figures it replaced would subtract numbers measured
+        differently.
+        {run.reporting_basis_note ? " " + run.reporting_basis_note : null}
       </p>
 
       {run.reasons.length > 0 ? (

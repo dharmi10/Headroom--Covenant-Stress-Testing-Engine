@@ -9,7 +9,7 @@ ifeq (,$(wildcard .venv/Scripts/python.exe))
 PY := .venv/bin/python
 endif
 
-.PHONY: help venv install test demo demo-live api ui golden fixture hand-calc measure clean
+.PHONY: help venv install test demo demo-live api ui golden inputs fixture hand-calc verify measure clean
 
 help:
 	@echo "make install    create the virtualenv and install everything"
@@ -19,7 +19,9 @@ help:
 	@echo "make api        start the backend on http://127.0.0.1:8000"
 	@echo "make ui         start the frontend on http://localhost:5173"
 	@echo "make golden     rebuild the hand-written golden formula from the agreement"
+	@echo "make inputs     rebuild ttm_inputs.json from the committed companyfacts"
 	@echo "make hand-calc  recompute expected.json independently of the evaluator"
+	@echo "make verify     recheck the golden case with no backend imports"
 	@echo "make measure    measure the compiler against the golden formula (needs credentials)"
 
 venv:
@@ -46,6 +48,12 @@ ui:
 
 golden:
 	$(PY) -m scripts.build_golden
+
+inputs:
+	$(PY) -m scripts.build_inputs
+
+verify:
+	$(PY) scripts/verify_teleflex.py
 
 fixture:
 	$(PY) -m scripts.build_fixture

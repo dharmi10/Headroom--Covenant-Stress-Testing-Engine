@@ -27,10 +27,16 @@ from backend.compiler.draft import CompileResult, compile_agreement
 from backend.compiler.spans import verify_version
 from backend.edgar.client import EdgarClient
 from backend.edgar.mapping import MappingRecord, propose, required_items
-from backend.evaluator.approval import approval_blockers
 from backend.evaluator.covenant import DEFAULT_TIGHT_BAND
 from backend.evaluator.schema import FormulaVersion
-from backend.pipeline import DealSources, coverage, load_sources, run_quarter, test_dates_for
+from backend.pipeline import (
+    DealSources,
+    all_blockers,
+    coverage,
+    load_sources,
+    run_quarter,
+    test_dates_for,
+)
 
 
 class ServiceError(RuntimeError):
@@ -256,7 +262,7 @@ def approve_version(
             "approval is blocked: spans do not match the agreement",
             [failure.as_dict() for failure in failures],
         )
-    blockers = approval_blockers(version)
+    blockers = all_blockers(version, mapping_records(session, deal.id))
     if blockers:
         raise Blocked(
             "approval is blocked while anything is unresolved",
@@ -484,8 +490,10 @@ def deal_status(session: Session, context: Context, deal: Deal) -> dict[str, Any
     }
     if row is not None:
         version = _row_to_version(row)
-        payload["blockers"] = [blocker.as_dict() for blocker in approval_blockers(version)]
         records = mapping_records(session, deal.id)
+        payload["blockers"] = [
+            blocker.as_dict() for blocker in all_blockers(version, records)
+        ]
         if records:
             verified, required = coverage(version, records)
             payload["mapping_coverage"] = {"verified": verified, "required": required}

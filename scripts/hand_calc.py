@@ -24,14 +24,25 @@ OUT = Path("data/golden/teleflex-2025q2/expected.json")
 D = Decimal
 
 # TTM figures for the four quarters ending 2025-06-29, each hand-checked
-# against the filing it came from (see ttm_inputs.json for accessions).
-NET_INCOME = D("191930000")
-INCOME_TAX = D("2224000")
-INTEREST = D("79902000")
-DEP_AMORT = D("102869000")
-STOCK_COMP = D("22508000")
-IMPAIRMENT = D("253841000")
-RESTRUCTURING = D("3900000")
+# against the filing it came from (see ttm_inputs.json for accessions and
+# docs/verification/teleflex.md for the quarter-by-quarter workings).
+#
+# All six reported items are taken on ONE reporting basis: the figures as
+# Teleflex originally published them. Teleflex restated 2024 and 2025 when it
+# separated its business, and the restating 10-K did not reissue the nine
+# months to September 2024, so the restated figures cannot produce a complete
+# window - the fourth quarter of 2024 would have to be the restated year minus
+# the original nine months, a subtraction across two bases that produced a
+# quarter with negative depreciation. See docs/decisions.md.
+BASIS = "as_originally_reported"
+
+NET_INCOME = D("191930000")       # unaffected: the annual total did not change
+INCOME_TAX = D("56036000")
+INTEREST = D("79945000")
+DEP_AMORT = D("273471000")
+STOCK_COMP = D("30376000")
+IMPAIRMENT = D("253841000")       # basis-neutral: identical in both filings
+RESTRUCTURING = D("8446000")
 TRANSACTION_COSTS = D("0")
 NON_CASH_GAINS = D("0")
 
@@ -147,11 +158,15 @@ def main() -> None:
         "test_date": "2025-06-29",
         "tight_band": str(TIGHT_BAND),
         "net_debt": str(net_debt),
+        "basis": BASIS,
         "note": (
             "Computed longhand from the TTM figures, independently of the "
-            "evaluator. S0 and S1 are identical because the agreement permits "
-            "no pro forma add-back: there are no projected cost savings to "
-            "remove."
+            "evaluator. Every reported item is taken on one reporting basis, "
+            "the figures as originally published, because a restatement falls "
+            "inside the window and the restated figures cannot produce a "
+            "complete one. S0 and S1 are identical because the agreement "
+            "permits no pro forma add-back: there are no projected cost "
+            "savings to remove."
         ),
         "scenarios": {},
     }
