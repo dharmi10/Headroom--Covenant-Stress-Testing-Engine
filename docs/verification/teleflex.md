@@ -114,18 +114,33 @@ adds back separately.
 
 The independent script recomputes this total as **253,841,000**. It matches.
 
-**But** the Q4 2024 intangible figure is itself derived across a restatement
-boundary: 7,834,000 (FY2024 as restated in the 2026 10-K) minus 2,110,000 (nine
-months as published in 2025).
+### This value is on one basis - an earlier version of this page said otherwise
 
-This is the one basis mix left in the run, and it is left on purpose. An
-analyst value is a figure a human hand-summed and signed a rationale for; the
-one-basis rule polices the facts the pipeline selects, and it cannot police a
-number typed in by a person. So the mix is recorded here rather than silently
-corrected. It is also the smaller of the two problems: the alternative is no
-impairment add-back at all, which would drop 253,841,000 from every scenario
-but S3. A multi-concept mapping that sums reported concepts on one basis is the
-right fix and is future work.
+An earlier version of this worksheet claimed the Q4 2024 intangible figure was
+"derived across a restatement boundary", taking 7,834,000 from the 2026 10-K.
+**That was wrong**, and the claim propagated into `docs/decisions.md` and the
+README before it was checked.
+
+The facts: `ImpairmentOfIntangibleAssetsExcludingGoodwill` for FY2024 was first
+filed **2025-02-28** in `0000096943-25-000031` at 7,834,000, and the 2026 10-K
+repeated the same 7,834,000 unchanged. That series has **no restatement
+boundary**, so both figures belong to both cohorts and the subtraction
+7,834,000 - 2,110,000 happens inside one presentation. The same is true of the
+goodwill series (9M of 0 in `0000096943-25-000138`, FY of 240,000,000 in
+`0000096943-25-000031`) and of the six months to 2025-06-29 (8,117,000, first
+filed 2025-07-31 in `0000096943-25-000115`).
+
+Deriving a quarter across two *filings* is normal - a fiscal Q4 can never be
+derived from one - and is not the same thing as deriving it across two *bases*.
+Confusing the two is what produced the wrong claim.
+
+The mapping record is therefore tagged `analyst_value_basis:
+as_originally_reported`, and the guard added alongside it refuses any analyst
+value whose basis differs from the one the run settled on
+(`inconsistent_basis`; see `backend/edgar/ttm.py`, `_analyst_value`, and
+`tests/test_basis.py`). A multi-concept mapping that sums reported concepts
+directly, instead of relying on a hand-summed total, is still the better answer
+and is still future work.
 
 ## Reporting basis - the material finding, and what was done about it
 

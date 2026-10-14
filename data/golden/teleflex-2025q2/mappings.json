@@ -68,11 +68,12 @@
       "status": "verified",
       "period_type": "duration",
       "analyst_value": "253841000",
-      "rationale": "Clause (b)(v) adds any non-cash charge; for this period that is goodwill and intangible impairment. No single concept carries it and neither sparse concept has a fact in all four quarters, because Teleflex tags them only in quarters with a non-zero amount, so no TTM window can be built mechanically. Hand-summed from the filings: goodwill impairment 240,000 thousand in Q4 FY2024 (GoodwillImpairmentLoss, accession 0000096943-25-000031) and intangible impairment 5,724 thousand in Q4 FY2024 and 8,117 thousand in Q2 FY2025 (ImpairmentOfIntangibleAssetsExcludingGoodwill, accessions 0000096943-26-000019 and 0000096943-26-000095), with nil reported in Q3 FY2024 and Q1 FY2025. Total 253,841 thousand.",
+      "rationale": "Clause (b)(v) adds any non-cash charge; for this period that is goodwill and intangible impairment. No single concept carries it and neither sparse concept has a fact in all four quarters, because Teleflex tags them only in quarters with a non-zero amount, so no TTM window can be built mechanically. Hand-summed from the filings: goodwill impairment 240,000 thousand in Q4 FY2024 (GoodwillImpairmentLoss, accession 0000096943-25-000031) and intangible impairment 5,724 thousand in Q4 FY2024 and 8,117 thousand in Q2 FY2025 (ImpairmentOfIntangibleAssetsExcludingGoodwill, accessions 0000096943-26-000019 and 0000096943-26-000095), with nil reported in Q3 FY2024 and Q1 FY2025. Total 253,841 thousand. Every fact behind this total belongs to both reporting cohorts: the nine months to 2024-09-29 (0, accession 0000096943-25-000138), the 2024 full year (7,834,000 intangible, first filed 2025-02-28 in 0000096943-25-000031 and repeated unchanged in the 2026 10-K), the goodwill full year (240,000,000, 0000096943-25-000031) and the six months to 2025-06-29 (8,117,000, first filed 2025-07-31 in 0000096943-25-000115). None of those series was ever restated, so the value is sourced on the figures as originally reported and is tagged with that basis.",
       "mapping_version": 1,
       "decided_by": "golden set",
       "decided_at": "2026-10-13T00:00:00",
-      "analyst_value_as_of": "2025-06-29"
+      "analyst_value_as_of": "2025-06-29",
+      "analyst_value_basis": "as_originally_reported"
     },
     {
       "formula_item": "transaction_costs",

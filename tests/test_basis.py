@@ -28,7 +28,12 @@ from backend.edgar.facts import (
     quarter_series,
     restated_periods,
 )
+from pathlib import Path
+
+from pydantic import ValidationError
+
 from backend.edgar.mapping import MappingRecord
+from backend.pipeline import load_mappings
 from backend.edgar.ttm import (
     build_period_inputs,
     build_ttm,
@@ -380,3 +385,108 @@ def test_the_basis_is_recorded_on_the_inputs_and_on_every_fact():
     resolved = inputs.items["depreciation_amortization"]
     assert resolved.usable
     assert {ref.basis for ref in resolved.facts} == {"as_originally_reported"}
+
+
+# -- analyst values carry a basis too ---------------------------------------
+#
+# The one-basis rule polices the facts the pipeline selects. An analyst value
+# is a figure a human hand-summed from a period's filings, and it is just as
+# basis-bound: twelve months of impairment is a different number either side of
+# a restatement. These tests cover the guard that refuses one sourced on the
+# basis the run did not choose.
+
+
+def analyst(
+    value: str,
+    *,
+    as_of: dt.date = TEST_DATE,
+    basis: str | None = None,
+    item: str = "impairment_charges",
+) -> MappingRecord:
+    return MappingRecord(
+        formula_item=item,  # type: ignore[arg-type]
+        status="verified",
+        period_type="duration",
+        rationale="hand-summed from the filings covering the window",
+        analyst_value=value,
+        analyst_value_as_of=as_of,
+        analyst_value_basis=basis,  # type: ignore[arg-type]
+    )
+
+
+def test_an_analyst_value_sourced_on_the_other_basis_is_refused():
+    resolved = resolve_duration_item(
+        "impairment_charges",
+        analyst("253841000", basis="as_restated"),
+        [],
+        TEST_DATE,
+        basis="as_originally_reported",
+    )
+    assert not resolved.usable
+    assert resolved.reason == "inconsistent_basis"
+    assert "as restated" in (resolved.note or "")
+    assert "as originally reported" in (resolved.note or "")
+
+
+def test_an_analyst_value_sourced_on_the_run_basis_is_used():
+    resolved = resolve_duration_item(
+        "impairment_charges",
+        analyst("253841000", basis="as_originally_reported"),
+        [],
+        TEST_DATE,
+        basis="as_originally_reported",
+    )
+    assert resolved.usable
+    assert resolved.value == D("253841000")
+    assert resolved.origin == "analyst"
+    assert [ref.basis for ref in resolved.facts] == ["as_originally_reported"]
+
+
+def test_an_analyst_value_with_no_basis_recorded_is_still_usable():
+    """Refusing an untagged value outright would be a migration, not a guard.
+    The provenance says the basis is unstated so it can be re-sourced."""
+    resolved = resolve_duration_item(
+        "impairment_charges",
+        analyst("253841000", basis=None),
+        [],
+        TEST_DATE,
+        basis="as_restated",
+    )
+    assert resolved.usable
+    assert [ref.basis for ref in resolved.facts] == [None]
+
+
+def test_a_basis_without_an_analyst_value_is_refused_by_the_schema():
+    with pytest.raises(ValidationError):
+        MappingRecord(
+            formula_item="impairment_charges",  # type: ignore[arg-type]
+            concept="GoodwillImpairmentLoss",
+            status="verified",
+            period_type="duration",
+            rationale="test",
+            analyst_value_basis="as_restated",
+        )
+
+
+def test_the_period_check_still_runs_before_the_basis_check():
+    """A value for the wrong quarter is refused as missing_analyst_input even
+    when its basis matches, because the period is the stronger objection."""
+    resolved = resolve_duration_item(
+        "impairment_charges",
+        analyst("253841000", as_of=dt.date(2025, 12, 31), basis="as_originally_reported"),
+        [],
+        TEST_DATE,
+        basis="as_originally_reported",
+    )
+    assert resolved.reason == "missing_analyst_input"
+
+
+def test_the_golden_impairment_value_is_tagged_with_the_basis_it_was_sourced_on():
+    """The golden deal's one analyst-valued add-back. Every fact behind it
+    belongs to both cohorts - none of those series was ever restated - so it is
+    tagged as originally reported, which is the basis the run settles on."""
+    records = load_mappings(Path("data/golden/teleflex-2025q2/mappings.json"))
+    record = records["impairment_charges"]
+    assert record.analyst_value == "253841000"
+    assert record.analyst_value_basis == "as_originally_reported"
+    assert record.analyst_value_as_of == TEST_DATE

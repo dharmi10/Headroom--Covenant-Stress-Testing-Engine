@@ -193,7 +193,27 @@ depreciation at that date can only be derived as the restated year minus the
 originally reported nine months, giving −33,230,000; it is refused. A run that
 declines is the correct answer and the previous one was not.
 
-### Open: whether Consolidated EBITDA should include discontinued operations
+### An analyst value carries a reporting basis, and a claim about one was wrong
+
+The one-basis rule was written for the facts the pipeline selects. An analyst
+value is a figure a human hand-summed from a period's filings, and it is just
+as basis-bound: twelve months of impairment is a different number either side
+of a restatement. `MappingRecord.analyst_value_basis` now records which vintage
+it was sourced from, and a run built on the other basis refuses it with
+`inconsistent_basis` rather than mixing it in. An untagged value is still used,
+with the provenance saying the basis is unstated - refusing those outright
+would be a migration rather than a guard.
+
+**A correction.** While adding this, the claim that Teleflex's impairment value
+mixed two vintages turned out to be false. The intangible FY2024 figure of
+7,834,000 was first filed 2025-02-28 and merely repeated in the 2026 10-K, so
+that series has no restatement boundary and the derivation sits inside one
+cohort. The original claim confused deriving a quarter across two *filings* -
+which every fiscal fourth quarter requires - with deriving it across two
+*bases*. The value is tagged `as_originally_reported` and the worksheet records
+what was wrong and why.
+
+## Open: whether Consolidated EBITDA should include discontinued operations
 
 **This is not resolved, and the figures above depend on it.**
 
@@ -285,7 +305,7 @@ and then the reason codes say which item and which scenarios it affected.
 | Section location is regex-based | An unusual layout fails loudly, and the fallback is an analyst pasting the clause, never a second model call |
 | Whether the covenant is measured on continuing operations is unresolved | The run is built on the figures as originally reported and names that basis; on the other reading the figures are the wrong basis rather than a wrong calculation |
 | The restated basis cannot build this quarter's window at all | The choice is forced rather than argued: the filer reissued the 2024 year without reissuing the nine months, and restated the 2025 series twice |
-| The impairment analyst value mixes two vintages | The Q4 2024 intangible figure is derived across the restatement boundary; the one-basis rule polices selected facts, not a figure a human hand-summed |
+| An analyst value is only as good as the reading behind it | It is now tagged with the basis it was sourced on and refused with `inconsistent_basis` on a run built the other way, but nothing can check the arithmetic a human did in their head |
 
 ## An analyst value is bound to the period it was sourced for
 

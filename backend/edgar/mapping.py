@@ -16,6 +16,7 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from backend.edgar.facts import Basis
 from backend.evaluator.approval import BLOCKER_TEXT, Blocker
 from backend.evaluator.schema import STRICT, IsoDate, IsoDateTime
 from backend.evaluator.vocabulary import ANALYST_ONLY_ITEMS, ItemName, period_type_for
@@ -48,6 +49,13 @@ class MappingRecord(BaseModel):
     mapping_version: int = Field(default=1, ge=1)
     analyst_value: str | None = None
     analyst_value_as_of: IsoDate | None = None
+    #: Which vintage of the filer's figures the analyst hand-summed this value
+    #: from. A run is built on one reporting basis (see ``backend/edgar/ttm.py``)
+    #: and an analyst value is as basis-bound as a reported fact: the same
+    #: twelve months of impairment is a different number before and after a
+    #: restatement. A value sourced on the other basis is refused with
+    #: ``inconsistent_basis`` rather than mixed into the window.
+    analyst_value_basis: Basis | None = None
     decided_by: str | None = None
     decided_at: IsoDateTime | None = None
 
@@ -58,6 +66,8 @@ class MappingRecord(BaseModel):
             # that period's filings. Without the period it is bound to, the
             # next quarter's run would silently reuse last quarter's number.
             raise ValueError("an analyst value must record the test date it was sourced for")
+        if self.analyst_value_basis is not None and self.analyst_value is None:
+            raise ValueError("a reporting basis only applies to an analyst value")
         if self.concept is not None and self.analyst_value is not None:
             # A concept and an analyst value are alternatives, not a value with
             # a label: holding both would leave which one computes implicit.

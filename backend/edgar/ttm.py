@@ -147,7 +147,7 @@ def resolve_duration_item(
     if not record.usable:
         return _unusable(item, record)
     if record.concept is None:
-        return _analyst_value(item, record, test_date)
+        return _analyst_value(item, record, test_date, basis=basis)
 
     window = build_ttm(facts, test_date, basis=basis)
     if window is None:
@@ -203,7 +203,7 @@ def resolve_instant_item(
     if not record.usable:
         return _unusable(item, record)
     if record.concept is None:
-        return _analyst_value(item, record, test_date)
+        return _analyst_value(item, record, test_date, basis=basis)
 
     fact = instant_at(facts, test_date, basis=basis)
     if fact is None:
@@ -250,13 +250,31 @@ def _unusable(item: str, record: MappingRecord) -> ItemInput:
     )
 
 
-def _analyst_value(item: str, record: MappingRecord, test_date: dt.date) -> ItemInput:
+def _analyst_value(
+    item: str,
+    record: MappingRecord,
+    test_date: dt.date,
+    *,
+    basis: Basis | None = None,
+) -> ItemInput:
     """A verified mapping with no concept: the analyst supplied the number.
 
     An analyst value is a figure for one TTM period, hand-summed from that
     period's filings. Reusing it for another quarter would be the same silent
     assumption as substituting zero, so a value sourced for a different test
     date is refused rather than carried forward.
+
+    It is bound to a reporting basis for the same reason. The run commits to
+    one vintage of the filer's figures, and twelve months of impairment is a
+    different number either side of a restatement. A value the analyst sourced
+    on the other basis is refused with ``inconsistent_basis``: the one-basis
+    rule is not weaker for a number a human typed in than for one the pipeline
+    selected.
+
+    A value with no basis recorded is used on any basis, and its provenance
+    says the basis is unstated. That is the pre-existing golden data, and
+    refusing it outright would be a migration rather than a guard; the audit
+    trail shows which values are unstated so they can be re-sourced.
     """
     if record.analyst_value is None:
         return ItemInput(
@@ -277,6 +295,24 @@ def _analyst_value(item: str, record: MappingRecord, test_date: dt.date) -> Item
                 + test_date.isoformat()
             ),
         )
+    if (
+        basis is not None
+        and record.analyst_value_basis is not None
+        and record.analyst_value_basis != basis
+    ):
+        return ItemInput(
+            item=item,  # type: ignore[arg-type]
+            reason="inconsistent_basis",
+            mapping_version=record.mapping_version,
+            note=(
+                "the analyst value was hand-summed from the figures "
+                + BASIS_LABELS[record.analyst_value_basis]
+                + ", and this run is built from the figures "
+                + BASIS_LABELS[basis]
+                + "; the same period is a different number on the two bases, so"
+                + " the value cannot be used here. Re-source it on this basis."
+            ),
+        )
     value = to_decimal(record.analyst_value, field=item)
     return ItemInput(
         item=item,  # type: ignore[arg-type]
@@ -288,10 +324,12 @@ def _analyst_value(item: str, record: MappingRecord, test_date: dt.date) -> Item
             FactRef(
                 concept="analyst_input",
                 value=value,
+                unit="USD",
                 period_type="duration",
                 end=test_date,
                 origin="analyst",
                 transformation=record.rationale,
+                basis=record.analyst_value_basis,
             )
         ],
     )

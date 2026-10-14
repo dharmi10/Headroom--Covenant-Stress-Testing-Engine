@@ -289,6 +289,12 @@ its offsets equals the quote. That proves the text exists. It does *not* prove
 the clause was read correctly — that is what the component-level review and the
 measured semantic accuracy are for.
 
+**Analyst values are bound to a period and a basis.** A figure a human
+hand-summed is refused for another quarter (`missing_analyst_input`) and
+refused on a run built from the other vintage of the filer's figures
+(`inconsistent_basis`). The one-basis rule is not weaker for a number a person
+typed in than for one the pipeline selected.
+
 **Reproducibility.** A run stores the formula version, source hash, reporting
 basis, mapping versions, evaluator version, every fact's accession number, each
 pool's working, and a canonical output hash over sorted-key JSON with decimals
